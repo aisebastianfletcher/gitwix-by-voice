@@ -30,7 +30,7 @@ class handler(BaseHTTPRequestHandler):
                 claude_messages = [{"role": "user", "content": "Hello"}]
 
             response = client.messages.create(
-                model="claude-sonnet-4-20250514",
+                model="claude-sonnet-4-6",
                 max_tokens=400,
                 system=system,
                 messages=claude_messages,
