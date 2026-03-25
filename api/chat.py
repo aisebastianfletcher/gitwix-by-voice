@@ -83,7 +83,10 @@ class handler(BaseHTTPRequestHandler):
                     continue
 
             if not text:
-                text = f"Steve debug: {last_error[:150]}"
+                if 'credit balance' in last_error.lower() or 'billing' in last_error.lower():
+                    text = "Hey, I'm having trouble connecting right now — looks like the API credits need topping up. Try again later!"
+                else:
+                    text = "Sorry, my brain's gone a bit fuzzy. Give me another go?"
 
             self._respond(200, {"response": text})
 
