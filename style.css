@@ -436,6 +436,7 @@ main {
 .hero {
   position: relative;
   text-align: center;
+  overflow: hidden;
 }
 
 .hero__content {
@@ -445,22 +446,11 @@ main {
   margin-inline: auto;
 }
 
-.hero__orb-container {
+.hero__orb-stage {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 500px;
-  height: 500px;
+  inset: 0;
   z-index: 1;
   pointer-events: none;
-}
-
-@media (max-width: 768px) {
-  .hero__orb-container {
-    width: 320px;
-    height: 320px;
-  }
 }
 
 .hero__badge {
@@ -747,32 +737,22 @@ main {
 }
 
 /* ========================================================
-   THREE.JS ORB CONTAINER (global overlay)
+   THREE.JS ORB — Hero Centrepiece
    ======================================================== */
 
 #orb-canvas-container {
-  position: fixed;
-  bottom: var(--space-8);
-  right: var(--space-8);
-  width: 180px;
-  height: 180px;
-  z-index: 200;
-  cursor: pointer;
-  transition: width 0.5s var(--ease-out),
-              height 0.5s var(--ease-out),
-              bottom 0.5s var(--ease-out),
-              right 0.5s var(--ease-out);
-}
-
-#orb-canvas-container.orb--expanded {
-  width: 300px;
-  height: 300px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
 }
 
 #orb-canvas-container canvas {
   width: 100% !important;
   height: 100% !important;
-  border-radius: 50%;
 }
 
 /* ========================================================

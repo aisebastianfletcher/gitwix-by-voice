@@ -78,7 +78,7 @@
       <!-- Hero -->
       <section class="section section--hero" id="section-hero">
         <div class="container hero">
-          <div class="hero__orb-container" id="orb-hero-anchor"></div>
+          <div class="hero__orb-stage" id="orb-hero-stage"></div>
           <div class="hero__content">
             <div class="hero__badge" id="hero-badge">
               <span class="hero__badge-dot"></span>
@@ -456,17 +456,15 @@
   </svg>
 </div>
 
-<!-- ====== STEVE VOICE UI ====== -->
+<!-- ====== STEVE VOICE UI (mic only) ====== -->
 <div class="steve-ui" id="steve-ui">
-  <div class="steve-bubble" id="steve-bubble">
-    <div class="steve-bubble__name">Steve</div>
-    <div id="steve-bubble-text">Hey there! I'm Steve, your AI concierge. Click the mic to chat with me.</div>
-  </div>
   <div class="steve-status" id="steve-status"></div>
   <button class="steve-mic-btn" id="steve-mic-btn" aria-label="Talk to Steve">
     <i data-lucide="mic" style="width:24px;height:24px"></i>
   </button>
 </div>
+<!-- Hidden elements for JS compatibility -->
+<div id="steve-bubble" style="display:none"><div id="steve-bubble-text"></div></div>
 
 <!-- ====== THREE.JS ORB CANVAS ====== -->
 <div id="orb-canvas-container"></div>

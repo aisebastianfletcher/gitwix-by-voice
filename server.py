@@ -59,8 +59,8 @@ async def chat(req: ChatRequest):
             claude_messages = [{"role": "user", "content": "Hello"}]
 
         response = llm_client.messages.create(
-            model="claude_sonnet_4_6",
-            max_tokens=1024,
+            model="claude_haiku_4_5",
+            max_tokens=300,
             system=req.system or "You are Steve, a helpful and witty AI web developer concierge.",
             messages=claude_messages,
         )
@@ -80,7 +80,7 @@ async def chat(req: ChatRequest):
 
 class TTSRequest(BaseModel):
     text: str
-    voice: str = "charon"
+    voice: str = "charlie"
 
 
 @app.post("/api/tts")
@@ -89,7 +89,7 @@ async def tts(req: TTSRequest):
         audio_bytes = await generate_audio(
             req.text,
             voice=req.voice,
-            model="gemini_2_5_pro_tts",
+            model="elevenlabs_tts_v3",
         )
         return Response(
             content=audio_bytes,

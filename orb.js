@@ -4,12 +4,26 @@
  */
 import * as THREE from 'three';
 
-const container = document.getElementById('orb-canvas-container');
+// Mount inside the hero stage, falling back to the global container
+const heroStage = document.getElementById('orb-hero-stage');
+const globalContainer = document.getElementById('orb-canvas-container');
+const container = heroStage || globalContainer;
 if (!container) throw new Error('Orb container not found');
 
+// If we're using hero stage, move the global container inside it
+if (heroStage && globalContainer) {
+  heroStage.appendChild(globalContainer);
+  globalContainer.style.position = 'absolute';
+  globalContainer.style.inset = '0';
+  globalContainer.style.width = '100%';
+  globalContainer.style.height = '100%';
+}
+
+const renderTarget = globalContainer || container;
+
 // === Config ===
-const ORB_COUNT = 300;
-const SPHERE_RADIUS = 2.2;
+const ORB_COUNT = 400;
+const SPHERE_RADIUS = 2.8;
 const IDLE_SPEED = 0.0008;
 const DISPERSE_STRENGTH = 1.8;
 const RETURN_SPEED = 0.04;
@@ -29,19 +43,21 @@ const IDLE_COLOR = new THREE.Color('#2A2520');
 // === Scene Setup ===
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-camera.position.z = 7;
+camera.position.z = 8;
 
 const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setClearColor(0x000000, 0);
-container.appendChild(renderer.domElement);
+renderTarget.appendChild(renderer.domElement);
 
 // === Orb Instanced Mesh ===
-const orbGeo = new THREE.SphereGeometry(0.06, 12, 8);
+const orbGeo = new THREE.SphereGeometry(0.045, 10, 6);
 const orbMat = new THREE.MeshStandardMaterial({
   color: IDLE_COLOR,
   roughness: 0.5,
   metalness: 0.3,
+  transparent: true,
+  opacity: 0.35,
 });
 const mesh = new THREE.InstancedMesh(orbGeo, orbMat, ORB_COUNT);
 
@@ -171,6 +187,10 @@ function animate() {
   colorAttr.needsUpdate = true;
   mesh.instanceMatrix.needsUpdate = true;
 
+  // Opacity: subtle at rest, vivid when active
+  const targetOpacity = isActive ? 0.85 : 0.35;
+  orbMat.opacity += (targetOpacity - orbMat.opacity) * 0.05;
+
   // Slow rotation
   mesh.rotation.y = time * 30;
   mesh.rotation.x = Math.sin(time * 15) * 0.1;
@@ -180,11 +200,13 @@ function animate() {
 
 // === Resize ===
 function resize() {
-  const w = container.clientWidth;
-  const h = container.clientHeight;
-  renderer.setSize(w, h);
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
+  const w = renderTarget.clientWidth;
+  const h = renderTarget.clientHeight;
+  if (w && h) {
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
 }
 
 window.addEventListener('resize', resize);
