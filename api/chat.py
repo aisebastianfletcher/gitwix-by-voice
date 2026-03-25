@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler
 import anthropic
 
 
-api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 client = anthropic.Anthropic(api_key=api_key) if api_key else None
 
 
@@ -31,7 +31,8 @@ class handler(BaseHTTPRequestHandler):
                 claude_messages = [{"role": "user", "content": "Hello"}]
 
             if not client:
-                raise ValueError("ANTHROPIC_API_KEY not set")
+                key_hint = api_key[:8] + "..." if api_key else "EMPTY"
+                raise ValueError(f"ANTHROPIC_API_KEY issue: starts with '{key_hint}', len={len(api_key)}")
 
             # Try models in order of preference
             models = [
