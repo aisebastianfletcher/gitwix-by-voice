@@ -34,9 +34,14 @@ class handler(BaseHTTPRequestHandler):
                 raise ValueError("ANTHROPIC_API_KEY not set")
 
             # Try models in order of preference
-            models = ["claude-sonnet-4-6", "claude-sonnet-4-5-20250929", "claude-3-5-sonnet-20241022"]
+            models = [
+                "claude-sonnet-4-6",
+                "claude-sonnet-4-5-20250929",
+                "claude-3-5-sonnet-20241022",
+                "claude-3-haiku-20240307",
+            ]
             text = None
-            last_err = None
+            errors = []
 
             for model in models:
                 try:
@@ -50,11 +55,12 @@ class handler(BaseHTTPRequestHandler):
                     if text:
                         break
                 except Exception as model_err:
-                    last_err = model_err
+                    errors.append(f"{model}: {str(model_err)[:60]}")
                     continue
 
             if not text:
-                text = "Sorry, I blanked out for a second there."
+                # Return debug info so we can see what's failing
+                text = f"Debug: tried {len(models)} models. Errors: {'; '.join(errors[:2])}"
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
