@@ -436,21 +436,35 @@ main {
 .hero {
   position: relative;
   text-align: center;
-  overflow: hidden;
+  overflow: visible;
 }
 
-.hero__content {
+/* Split hero: text left, orb right */
+.hero--split {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  gap: var(--space-8);
+}
+
+.hero__content--left {
   position: relative;
   z-index: 2;
-  max-width: 720px;
-  margin-inline: auto;
+  flex: 1 1 55%;
+  max-width: 620px;
 }
 
-.hero__orb-stage {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
+.hero__content--left .hero__desc {
+  margin-inline: 0;
+}
+
+.hero__content--left .hero__actions {
+  justify-content: flex-start;
+}
+
+.hero__orb-placeholder {
+  flex: 1 1 45%;
+  min-height: 400px;
 }
 
 .hero__badge {
@@ -732,19 +746,61 @@ main {
    THREE.JS ORB — Hero Centrepiece
    ======================================================== */
 
-#orb-canvas-container {
-  position: absolute;
+/* === ORB VIEWPORT WRAPPER — fixed to screen, moves with scroll === */
+#orb-viewport-wrapper {
+  position: fixed;
   top: 0;
-  left: 0;
+  left: 55%;
+  right: auto;
+  width: 45vw;
+  height: 100vh;
+  z-index: 2;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: left, opacity;
+  transition: none; /* GSAP handles transitions */
+}
+
+#orb-canvas-container {
   width: 100%;
   height: 100%;
-  z-index: 1;
   pointer-events: none;
 }
 
 #orb-canvas-container canvas {
   width: 100% !important;
   height: 100% !important;
+}
+
+/* On mobile, orb sits behind content (not companion mode) */
+@media (max-width: 768px) {
+  #orb-viewport-wrapper {
+    position: fixed;
+    width: 100vw;
+    height: 50vh;
+    top: 10vh;
+    right: 0;
+    opacity: 0.25;
+    z-index: 0;
+  }
+  .hero--split {
+    flex-direction: column;
+    text-align: center;
+  }
+  .hero__content--left {
+    max-width: 100%;
+  }
+  .hero__content--left .hero__desc {
+    margin-inline: auto;
+  }
+  .hero__content--left .hero__actions {
+    justify-content: center;
+  }
+  .hero__orb-placeholder {
+    display: none;
+  }
 }
 
 /* ========================================================
@@ -1238,6 +1294,16 @@ main {
 .steve-mic-btn--active {
   background: var(--color-primary);
   box-shadow: 0 0 0 4px rgba(184, 148, 63, 0.2), var(--shadow-lg);
+}
+
+.steve-mic-btn--error {
+  background: #c0392b;
+  animation: mic-error-pulse 0.4s ease-in-out 3;
+}
+
+@keyframes mic-error-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 /* Lenis smooth scroll body */

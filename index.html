@@ -80,11 +80,10 @@
     <!-- ==================== HOME PAGE ==================== -->
     <div class="page page--active" id="page-home">
 
-      <!-- Hero -->
+      <!-- Hero — text left, orb occupies right via viewport wrapper -->
       <section class="section section--hero" id="section-hero">
-        <div class="container hero">
-          <div class="hero__orb-stage" id="orb-hero-stage"></div>
-          <div class="hero__content">
+        <div class="container hero hero--split">
+          <div class="hero__content hero__content--left">
             <div class="hero__badge" id="hero-badge">
               <span class="hero__badge-dot"></span>
               Steve is online
@@ -106,6 +105,8 @@
               </button>
             </div>
           </div>
+          <!-- Orb fills the right side via the fixed viewport wrapper -->
+          <div class="hero__orb-placeholder" aria-hidden="true"></div>
         </div>
       </section>
 
@@ -517,8 +518,10 @@
   </div>
 </div>
 
-<!-- ====== THREE.JS ORB CANVAS ====== -->
-<div id="orb-canvas-container"></div>
+<!-- ====== THREE.JS ORB CANVAS (viewport-level, scroll-following) ====== -->
+<div id="orb-viewport-wrapper">
+  <div id="orb-canvas-container"></div>
+</div>
 
 <!-- Scripts -->
 <script type="module" src="./orb.js"></script>

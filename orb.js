@@ -1,25 +1,14 @@
 /**
  * Gitwix — Three.js Orb Cluster Visualizer
- * Spherical cluster of smaller orbs with audio-reactive behavior.
+ * Viewport-level orb that follows scroll, repositioning itself
+ * around content sections for an immersive companion effect.
  */
 import * as THREE from 'three';
 
-// Mount inside the hero stage, falling back to the global container
-const heroStage = document.getElementById('orb-hero-stage');
-const globalContainer = document.getElementById('orb-canvas-container');
-const container = heroStage || globalContainer;
-if (!container) throw new Error('Orb container not found');
-
-// If we're using hero stage, move the global container inside it
-if (heroStage && globalContainer) {
-  heroStage.appendChild(globalContainer);
-  globalContainer.style.position = 'absolute';
-  globalContainer.style.inset = '0';
-  globalContainer.style.width = '100%';
-  globalContainer.style.height = '100%';
-}
-
-const renderTarget = globalContainer || container;
+// Mount inside the viewport wrapper (fixed to screen)
+const wrapper = document.getElementById('orb-viewport-wrapper');
+const canvasContainer = document.getElementById('orb-canvas-container');
+if (!wrapper || !canvasContainer) throw new Error('Orb containers not found');
 
 // === Config ===
 const ORB_COUNT = 400;
@@ -48,7 +37,7 @@ camera.position.z = 8;
 const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setClearColor(0x000000, 0);
-renderTarget.appendChild(renderer.domElement);
+canvasContainer.appendChild(renderer.domElement);
 
 // === Orb Instanced Mesh ===
 const orbGeo = new THREE.SphereGeometry(0.045, 10, 6);
@@ -101,9 +90,13 @@ pointLight.position.set(-3, 2, 4);
 scene.add(pointLight);
 
 // === Audio Analysis State ===
-let audioLevel = 0; // 0-1 normalized RMS
-let frequencyData = new Float32Array(32); // frequency bins
+let audioLevel = 0;
+let frequencyData = new Float32Array(32);
 let isActive = false;
+
+// === Orb size state ===
+let currentScale = 1;
+let targetScale = 1;
 
 // === Public API ===
 window.orbVisualizer = {
@@ -121,7 +114,11 @@ window.orbVisualizer = {
   setActive(active) {
     isActive = active;
     if (!active) audioLevel = 0;
-  }
+  },
+  // Called by scroll.js to scale the orb (e.g. smaller in tight sections)
+  setScale(s) {
+    targetScale = s;
+  },
 };
 
 // === Animation Loop ===
@@ -131,18 +128,19 @@ function animate() {
   requestAnimationFrame(animate);
   time += IDLE_SPEED;
 
+  // Smooth scale transition
+  currentScale += (targetScale - currentScale) * 0.05;
+
   for (let i = 0; i < ORB_COUNT; i++) {
     const base = basePositions[i];
     const curr = currentPositions[i];
     const vel = velocities[i];
 
     if (isActive) {
-      // Disperse based on audio level
       const freqIdx = i % 32;
       const freqBoost = 1 + (frequencyData[freqIdx] || 0) * 3;
       const disperseAmount = audioLevel * DISPERSE_STRENGTH * freqBoost;
 
-      // Direction: outward from center + some chaos
       const dir = base.clone().normalize();
       const chaos = new THREE.Vector3(
         Math.sin(time * 200 + i * 0.7) * 0.3,
@@ -154,12 +152,10 @@ function animate() {
       vel.lerp(target.sub(curr).multiplyScalar(0.15), 0.3);
       curr.add(vel);
 
-      // Color → active palette
       const colorIdx = i % ACTIVE_COLORS.length;
       targetColors[i].copy(ACTIVE_COLORS[colorIdx]);
     } else {
-      // Return to sphere
-      // Gentle breathing — slow, organic drift
+      // Gentle breathing drift
       const breathPhase = time * 12;
       const idleOffset = new THREE.Vector3(
         Math.sin(breathPhase + i * 0.5) * 0.06,
@@ -170,18 +166,15 @@ function animate() {
       curr.lerp(target, RETURN_SPEED);
       vel.multiplyScalar(0.9);
 
-      // Color → idle
       targetColors[i].copy(IDLE_COLOR);
     }
 
-    // Smooth color lerp
     orbColors[i].lerp(targetColors[i], COLOR_TRANSITION_SPEED);
     colorAttr.setXYZ(i, orbColors[i].r, orbColors[i].g, orbColors[i].b);
 
-    // Update instance
     dummy.position.copy(curr);
     const s = isActive ? 1 + audioLevel * 0.5 + (frequencyData[i % 32] || 0) * 0.8 : 1;
-    dummy.scale.setScalar(s);
+    dummy.scale.setScalar(s * currentScale);
     dummy.updateMatrix();
     mesh.setMatrixAt(i, dummy.matrix);
   }
@@ -202,14 +195,17 @@ function animate() {
 
 // === Resize ===
 function resize() {
-  const w = renderTarget.clientWidth;
-  const h = renderTarget.clientHeight;
+  const w = canvasContainer.clientWidth;
+  const h = canvasContainer.clientHeight;
   if (w && h) {
     renderer.setSize(w, h);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
 }
+
+// Expose resize so scroll.js can call it after repositioning
+window.orbResize = resize;
 
 window.addEventListener('resize', resize);
 resize();

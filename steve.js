@@ -607,6 +607,29 @@ function stopListening() {
 // === Activate Steve — Start the Conversation ===
 async function activateSteve() {
   if (conversationActive) return;
+
+  // Request microphone permission explicitly before starting
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Permission granted — stop the stream immediately (we use SpeechRecognition, not raw audio)
+    stream.getTracks().forEach(t => t.stop());
+  } catch (err) {
+    console.warn('Mic permission denied:', err);
+    updateStatus('Please allow microphone access to talk to Steve');
+    // Show a helpful message based on the error
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      updateStatus('Mic blocked — click the lock icon in your address bar to allow');
+    } else if (err.name === 'NotFoundError') {
+      updateStatus('No microphone found — please connect one and try again');
+    } else {
+      updateStatus('Mic unavailable — check your browser settings');
+    }
+    // Pulse the status briefly so the user sees it
+    micBtn.classList.add('steve-mic-btn--error');
+    setTimeout(() => micBtn.classList.remove('steve-mic-btn--error'), 3000);
+    return; // Don't activate without mic
+  }
+
   conversationActive = true;
 
   // Resume audio context (required for autoplay policy)
