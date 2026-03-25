@@ -31,8 +31,7 @@ class handler(BaseHTTPRequestHandler):
                 claude_messages = [{"role": "user", "content": "Hello"}]
 
             if not client:
-                key_hint = api_key[:8] + "..." if api_key else "EMPTY"
-                raise ValueError(f"ANTHROPIC_API_KEY issue: starts with '{key_hint}', len={len(api_key)}")
+                raise ValueError("ANTHROPIC_API_KEY not set")
 
             # Try models in order of preference
             models = [
@@ -60,8 +59,7 @@ class handler(BaseHTTPRequestHandler):
                     continue
 
             if not text:
-                # Return debug info so we can see what's failing
-                text = f"Debug: tried {len(models)} models. Errors: {'; '.join(errors[:2])}"
+                text = "Sorry, I blanked out for a second there."
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
