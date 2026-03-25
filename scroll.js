@@ -19,53 +19,48 @@ function initScrollDynamics() {
   gsap.ticker.add((time) => lenis.raf(time * 1000));
   gsap.ticker.lagSmoothing(0);
 
-  // === STEVE ORB SCROLL COMPANION (desktop only) ===
+  // === STEVE ORB SCROLL COMPANION v2 (desktop only) ===
+  // v2 key insight: content sections use asymmetric split layouts.
+  // When orb is on the right (left:55%), content is on the left ~55% of viewport.
+  // When orb is on the left (left:0%), content is on the right ~55% of viewport.
+  // The content "scrolls past" the orb because it genuinely occupies the other side.
   const orbWrapper = document.getElementById('orb-viewport-wrapper');
   const isDesktopOrb = window.innerWidth > 768;
 
   if (orbWrapper && isDesktopOrb) {
-    // The orb wrapper is position:fixed. We use GSAP xPercent to smoothly
-    // slide it left/right. The wrapper is always full-viewport width but
-    // we translate it so the orb (centered inside) appears in the blank space.
-    //
-    // Strategy: wrapper is 45vw wide, starts at right: 0. We control its
-    // horizontal position with GSAP `left` in % (never `auto`, which GSAP
-    // cannot tween). The wrapper already has right:0 in CSS — we override
-    // with explicit left + right:auto to give GSAP a tweakable numeric value.
-
-    // Set initial position: orb on right side (55% from left = right column)
+    // Set initial position: orb on right side
     gsap.set(orbWrapper, { left: '55%', right: 'auto', width: '45vw' });
 
-    // Position map (% from left edge of viewport):
-    //   right side  = left: 55%   (orb occupies rightmost 45vw)
-    //   left side   = left: 0%    (orb occupies leftmost 45vw)
-    //   center      = left: 27.5% (orb centered)
+    // Position map — each section has content on one side, orb on the other
+    //   left: 55%  → orb RIGHT column (content is LEFT via split-layout--left)
+    //   left: 0%   → orb LEFT column  (content is RIGHT via split-layout--right)
     const sections = [
-      // Hero: text left → orb right
+      // Hero: text left → orb right (big, full presence)
       { trigger: '#section-hero', leftPct: '55%', scale: 1, opacity: 1 },
 
-      // Services: title left → orb drifts right, smaller
-      { trigger: '#section-services-hscroll', leftPct: '55%', scale: 0.7, opacity: 0.5 },
+      // Services h-scroll: header left → orb drifts right, shrinks
+      { trigger: '#section-services-hscroll', leftPct: '55%', scale: 0.65, opacity: 0.4 },
 
-      // Stats: centered → orb goes left
-      { trigger: '#section-stats', leftPct: '0%', scale: 0.65, opacity: 0.4 },
+      // Stats: content RIGHT → orb LEFT, grows from services small size
+      { trigger: '#section-stats', leftPct: '0%', scale: 0.75, opacity: 0.6 },
 
-      // Testimonials: staggered cards → orb goes right
-      { trigger: '#section-testimonials', leftPct: '55%', scale: 0.75, opacity: 0.5 },
+      // Testimonials: content RIGHT → orb LEFT, stays same side, slightly smaller
+      { trigger: '#section-testimonials', leftPct: '0%', scale: 0.7, opacity: 0.55 },
 
-      // CTA: centered → orb goes left
-      { trigger: '#section-cta', leftPct: '0%', scale: 0.8, opacity: 0.6 },
+      // CTA: content LEFT → orb RIGHT, big dramatic switch back
+      { trigger: '#section-cta', leftPct: '55%', scale: 0.85, opacity: 0.65 },
     ];
 
-    // Helper to animate orb to a position
+    // Helper to animate orb to a position with smooth transition
     function moveOrb(leftPct, opacity, scale) {
       gsap.to(orbWrapper, {
         left: leftPct,
         opacity: opacity,
-        duration: 0.8,
+        duration: 1,
         ease: 'power2.inOut',
         onUpdate: () => window.orbResize?.(),
       });
+      // Smooth scale via the Three.js API
       window.orbVisualizer?.setScale(scale);
     }
 
@@ -91,7 +86,7 @@ function initScrollDynamics() {
         end: 'top 50%',
         scrub: true,
         onUpdate: (self) => {
-          gsap.set(orbWrapper, { opacity: 0.6 * (1 - self.progress) });
+          gsap.set(orbWrapper, { opacity: 0.65 * (1 - self.progress) });
         },
       });
     }
@@ -275,13 +270,14 @@ function initScrollDynamics() {
     );
   });
 
-  // Stats section — staggered line draws for dividers
+  // Stats section — staggered reveal from the right (content side)
   const statsSection = document.getElementById('section-stats');
   if (statsSection) {
-    gsap.fromTo(statsSection.querySelectorAll('.stat'),
-      { opacity: 0, y: 40 },
+    const statsContent = statsSection.querySelector('.split-layout__content') || statsSection;
+    gsap.fromTo(statsContent.querySelectorAll('.stat'),
+      { opacity: 0, x: 40 },
       {
-        opacity: 1, y: 0,
+        opacity: 1, x: 0,
         stagger: 0.12,
         duration: 0.7,
         ease: 'power2.out',
@@ -294,17 +290,15 @@ function initScrollDynamics() {
     );
   }
 
-  // === TESTIMONIALS — Stacked Parallax Cards ===
+  // === TESTIMONIALS — Stacked cards with staggered reveal ===
   const testimonialsSection = document.getElementById('section-testimonials');
   if (testimonialsSection) {
     const testimonials = testimonialsSection.querySelectorAll('.testimonial');
 
     testimonials.forEach((card, i) => {
-      // Staggered entrance from alternating sides
-      const fromX = i % 2 === 0 ? -60 : 60;
-
+      // Cards slide in from the right (they’re on the right side of the split layout)
       gsap.fromTo(card,
-        { opacity: 0, x: fromX, rotateZ: i % 2 === 0 ? -2 : 2 },
+        { opacity: 0, x: 60, rotateZ: 1 },
         {
           opacity: 1, x: 0, rotateZ: 0,
           duration: 0.8,
@@ -319,7 +313,7 @@ function initScrollDynamics() {
 
       // Subtle parallax on scroll
       gsap.to(card, {
-        y: (i % 2 === 0 ? -30 : -15),
+        y: (i % 2 === 0 ? -20 : -10),
         scrollTrigger: {
           trigger: card,
           start: 'top bottom',

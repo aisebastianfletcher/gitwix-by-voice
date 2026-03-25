@@ -524,6 +524,56 @@ main {
 }
 
 /* ========================================================
+   SPLIT LAYOUT SYSTEM — Content flows around the orb
+   ======================================================== */
+
+/* Desktop: two-column split. Content occupies ~55%, orb space ~45% */
+.split-layout {
+  display: flex;
+  align-items: stretch;
+  max-width: var(--content-wide);
+  margin-inline: auto;
+  padding-inline: var(--space-6);
+  gap: var(--space-8);
+}
+
+.split-layout__content {
+  position: relative;
+  flex: 1 1 55%;
+  max-width: 55%;
+  z-index: 3;
+}
+
+.split-layout__orb-space {
+  flex: 1 1 40%;
+  min-height: 280px;
+}
+
+/* Content on the LEFT side (orb right) */
+.split-layout--left {
+  flex-direction: row;
+}
+
+/* Content on the RIGHT side (orb left) */
+.split-layout--right {
+  flex-direction: row;
+}
+
+/* Mobile: collapse to full-width stacked */
+@media (max-width: 768px) {
+  .split-layout {
+    flex-direction: column;
+  }
+  .split-layout__content {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+  .split-layout__orb-space {
+    display: none;
+  }
+}
+
+/* ========================================================
    STATS
    ======================================================== */
 
@@ -538,6 +588,20 @@ main {
 
 @media (min-width: 768px) {
   .stats { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Stacked variant for split layout — 2-col grid within the content side */
+.stats--stacked {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-8);
+  padding: var(--space-6) 0;
+  border-top: 1px solid var(--color-divider);
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.stat--horizontal {
+  text-align: left;
 }
 
 .stat {
@@ -1064,13 +1128,21 @@ main {
 }
 
 /* ========================================================
-   TESTIMONIALS — Parallax Grid
+   TESTIMONIALS — Stacked on one side for orb companion
    ======================================================== */
 
 .section--testimonials {
   overflow: hidden;
 }
 
+/* Single-column stacked testimonials within the split layout content area */
+.testimonials-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* Keep the old grid class working for mobile fallback */
 .testimonials-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -1082,7 +1154,6 @@ main {
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-8);
   }
-  /* Offset second column for staggered look */
   .testimonials-grid .testimonial:nth-child(2) { margin-top: var(--space-16); }
   .testimonials-grid .testimonial:nth-child(4) { margin-top: var(--space-16); }
 }

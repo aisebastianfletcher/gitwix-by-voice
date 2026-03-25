@@ -164,100 +164,111 @@
         </div>
       </section>
 
-      <!-- Stats -->
-      <section class="section section--stats" id="section-stats">
-        <div class="container">
-          <!-- Decorative parallax elements -->
-          <div class="deco-float deco-float--1" data-parallax="0.3"></div>
-          <div class="deco-float deco-float--2" data-parallax="-0.2"></div>
-          <div class="stats" id="stats-grid">
-            <div class="stat" id="stat-projects">
-              <div class="stat__number" data-count="87">0+</div>
-              <div class="stat__label">Projects Delivered</div>
-            </div>
-            <div class="stat" id="stat-clients">
-              <div class="stat__number" data-count="35">0+</div>
-              <div class="stat__label">Happy Clients</div>
-            </div>
-            <div class="stat" id="stat-score">
-              <div class="stat__number" data-count="100">0</div>
-              <div class="stat__label">Lighthouse Score</div>
-            </div>
-            <div class="stat" id="stat-conversion">
-              <div class="stat__number">35%</div>
-              <div class="stat__label">Avg. Conversion Lift</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Testimonials — Parallax Stacked -->
-      <section class="section section--testimonials" id="section-testimonials">
-        <div class="container">
-          <div class="text-center mb-8">
-            <span class="section__label" id="testimonials-label">Client Stories</span>
-            <h2 class="section__title" id="testimonials-title">Trusted by founders &amp; teams.</h2>
-          </div>
-          <div class="testimonials-grid" id="testimonials-grid">
-            <div class="testimonial" id="testimonial-1">
-              <div class="testimonial__quote-mark">&ldquo;</div>
-              <p class="testimonial__quote">Gitwix didn't just build our website — they understood our vision and translated it into something our customers love. The AI features blew our minds.</p>
-              <div class="testimonial__footer">
-                <div>
-                  <div class="testimonial__author">Sarah Chen</div>
-                  <div class="testimonial__role">CEO, NovaTech Solutions</div>
-                </div>
+      <!-- Stats — content RIGHT, orb occupies LEFT -->
+      <section class="section section--stats section--orb-left" id="section-stats">
+        <div class="split-layout split-layout--right">
+          <div class="split-layout__orb-space" aria-hidden="true"></div>
+          <div class="split-layout__content">
+            <!-- Decorative parallax elements -->
+            <div class="deco-float deco-float--1" data-parallax="0.3"></div>
+            <div class="deco-float deco-float--2" data-parallax="-0.2"></div>
+            <span class="section__label">In Numbers</span>
+            <h2 class="section__title">Results that<br>speak volumes.</h2>
+            <div class="stats stats--stacked" id="stats-grid">
+              <div class="stat stat--horizontal" id="stat-projects">
+                <div class="stat__number" data-count="87">0+</div>
+                <div class="stat__label">Projects Delivered</div>
               </div>
-            </div>
-            <div class="testimonial" id="testimonial-2">
-              <div class="testimonial__quote-mark">&ldquo;</div>
-              <p class="testimonial__quote">Working with the Gitwix team was like having a senior engineering department on speed dial. Fast, precise, and they actually listen.</p>
-              <div class="testimonial__footer">
-                <div>
-                  <div class="testimonial__author">Marcus Webb</div>
-                  <div class="testimonial__role">Founder, Ridgeline Ventures</div>
-                </div>
+              <div class="stat stat--horizontal" id="stat-clients">
+                <div class="stat__number" data-count="35">0+</div>
+                <div class="stat__label">Happy Clients</div>
               </div>
-            </div>
-            <div class="testimonial" id="testimonial-3">
-              <div class="testimonial__quote-mark">&ldquo;</div>
-              <p class="testimonial__quote">Our conversion rate jumped 42% within a month of launching the new site. The ROI speaks for itself.</p>
-              <div class="testimonial__footer">
-                <div>
-                  <div class="testimonial__author">Priya Patel</div>
-                  <div class="testimonial__role">Marketing Director, Kōda Studio</div>
-                </div>
+              <div class="stat stat--horizontal" id="stat-score">
+                <div class="stat__number" data-count="100">0</div>
+                <div class="stat__label">Lighthouse Score</div>
               </div>
-            </div>
-            <div class="testimonial" id="testimonial-4">
-              <div class="testimonial__quote-mark">&ldquo;</div>
-              <p class="testimonial__quote">Steve, the AI concierge, is genuinely impressive. Our visitors spend 3x longer on the site because they love interacting with him.</p>
-              <div class="testimonial__footer">
-                <div>
-                  <div class="testimonial__author">James O'Sullivan</div>
-                  <div class="testimonial__role">CTO, Beacon Digital</div>
-                </div>
+              <div class="stat stat--horizontal" id="stat-conversion">
+                <div class="stat__number">35%</div>
+                <div class="stat__label">Avg. Conversion Lift</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- CTA -->
-      <section class="section section--cta" id="section-cta">
-        <div class="container text-center">
-          <h2 class="section__title" id="cta-title">Ready to build something<br><em style="font-style:italic;color:var(--color-primary)">extraordinary</em>?</h2>
-          <p class="section__subtitle mx-auto" id="cta-subtitle">Book a free consultation. Or better yet, just ask Steve.</p>
-          <div class="hero__actions" id="cta-actions">
-            <button class="btn btn--primary" id="btn-cta-book" data-page="contact">
-              <i data-lucide="calendar" style="width:16px;height:16px"></i>
-              Book a consultation
-            </button>
-            <button class="btn btn--outline" id="btn-cta-steve" data-action="activate-steve">
-              <i data-lucide="mic" style="width:16px;height:16px"></i>
-              Ask Steve
-            </button>
+      <!-- Testimonials — content RIGHT, orb occupies LEFT -->
+      <section class="section section--testimonials section--orb-left" id="section-testimonials">
+        <div class="split-layout split-layout--right">
+          <div class="split-layout__orb-space" aria-hidden="true"></div>
+          <div class="split-layout__content">
+            <div class="mb-8">
+              <span class="section__label" id="testimonials-label">Client Stories</span>
+              <h2 class="section__title" id="testimonials-title">Trusted by founders<br>&amp; teams.</h2>
+            </div>
+            <div class="testimonials-stack" id="testimonials-grid">
+              <div class="testimonial" id="testimonial-1">
+                <div class="testimonial__quote-mark">&ldquo;</div>
+                <p class="testimonial__quote">Gitwix didn't just build our website — they understood our vision and translated it into something our customers love. The AI features blew our minds.</p>
+                <div class="testimonial__footer">
+                  <div>
+                    <div class="testimonial__author">Sarah Chen</div>
+                    <div class="testimonial__role">CEO, NovaTech Solutions</div>
+                  </div>
+                </div>
+              </div>
+              <div class="testimonial" id="testimonial-2">
+                <div class="testimonial__quote-mark">&ldquo;</div>
+                <p class="testimonial__quote">Working with the Gitwix team was like having a senior engineering department on speed dial. Fast, precise, and they actually listen.</p>
+                <div class="testimonial__footer">
+                  <div>
+                    <div class="testimonial__author">Marcus Webb</div>
+                    <div class="testimonial__role">Founder, Ridgeline Ventures</div>
+                  </div>
+                </div>
+              </div>
+              <div class="testimonial" id="testimonial-3">
+                <div class="testimonial__quote-mark">&ldquo;</div>
+                <p class="testimonial__quote">Our conversion rate jumped 42% within a month of launching the new site. The ROI speaks for itself.</p>
+                <div class="testimonial__footer">
+                  <div>
+                    <div class="testimonial__author">Priya Patel</div>
+                    <div class="testimonial__role">Marketing Director, Kōda Studio</div>
+                  </div>
+                </div>
+              </div>
+              <div class="testimonial" id="testimonial-4">
+                <div class="testimonial__quote-mark">&ldquo;</div>
+                <p class="testimonial__quote">Steve, the AI concierge, is genuinely impressive. Our visitors spend 3x longer on the site because they love interacting with him.</p>
+                <div class="testimonial__footer">
+                  <div>
+                    <div class="testimonial__author">James O'Sullivan</div>
+                    <div class="testimonial__role">CTO, Beacon Digital</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+        </div>
+      </section>
+
+      <!-- CTA — content LEFT, orb occupies RIGHT -->
+      <section class="section section--cta section--orb-right" id="section-cta">
+        <div class="split-layout split-layout--left">
+          <div class="split-layout__content">
+            <h2 class="section__title" id="cta-title">Ready to build something<br><em style="font-style:italic;color:var(--color-primary)">extraordinary</em>?</h2>
+            <p class="section__subtitle" id="cta-subtitle">Book a free consultation. Or better yet, just ask Steve.</p>
+            <div class="hero__actions" id="cta-actions" style="justify-content:flex-start;">
+              <button class="btn btn--primary" id="btn-cta-book" data-page="contact">
+                <i data-lucide="calendar" style="width:16px;height:16px"></i>
+                Book a consultation
+              </button>
+              <button class="btn btn--outline" id="btn-cta-steve" data-action="activate-steve">
+                <i data-lucide="mic" style="width:16px;height:16px"></i>
+                Ask Steve
+              </button>
+            </div>
+          </div>
+          <div class="split-layout__orb-space" aria-hidden="true"></div>
         </div>
       </section>
     </div>
