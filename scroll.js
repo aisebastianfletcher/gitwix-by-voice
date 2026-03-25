@@ -19,65 +19,89 @@ function initScrollDynamics() {
   gsap.ticker.add((time) => lenis.raf(time * 1000));
   gsap.ticker.lagSmoothing(0);
 
-  // === STEVE ORB SCROLL COMPANION v2 (desktop only) ===
-  // v2 key insight: content sections use asymmetric split layouts.
-  // When orb is on the right (left:55%), content is on the left ~55% of viewport.
-  // When orb is on the left (left:0%), content is on the right ~55% of viewport.
-  // The content "scrolls past" the orb because it genuinely occupies the other side.
+  // === STEVE ORB SCROLL COMPANION v3 (desktop only) ===
+  // v3: Smooth orb that glides between sections. The orb wrapper is 38vw wide.
+  // Positions are chosen so the orb sits cleanly between content, never overlapping.
+  // Uses onEnter/onEnterBack with gsap.to for smooth position-based animation.
   const orbWrapper = document.getElementById('orb-viewport-wrapper');
   const isDesktopOrb = window.innerWidth > 768;
 
   if (orbWrapper && isDesktopOrb) {
-    // Set initial position: orb on right side
-    gsap.set(orbWrapper, { left: '55%', right: 'auto', width: '45vw' });
+    // Position constants (% from left edge):
+    //   right  = 62%  → orb in rightmost 38vw, clear of left content
+    //   left   = 2%   → orb in leftmost 38vw, clear of right content
+    //   far-R  = 68%  → pushed to edge during full-width services section
+    const ORB_RIGHT = '62%';
+    const ORB_LEFT  = '2%';
+    const ORB_FAR_R = '68%';
 
-    // Position map — each section has content on one side, orb on the other
-    //   left: 55%  → orb RIGHT column (content is LEFT via split-layout--left)
-    //   left: 0%   → orb LEFT column  (content is RIGHT via split-layout--right)
-    const sections = [
-      // Hero: text left → orb right (big, full presence)
-      { trigger: '#section-hero', leftPct: '55%', scale: 1, opacity: 1 },
+    // Initial position: orb on right
+    gsap.set(orbWrapper, { left: ORB_RIGHT, right: 'auto', width: '38vw', opacity: 1 });
 
-      // Services h-scroll: header left → orb drifts right, shrinks
-      { trigger: '#section-services-hscroll', leftPct: '55%', scale: 0.65, opacity: 0.4 },
-
-      // Stats: content RIGHT → orb LEFT, grows from services small size
-      { trigger: '#section-stats', leftPct: '0%', scale: 0.75, opacity: 0.6 },
-
-      // Testimonials: content RIGHT → orb LEFT, stays same side, slightly smaller
-      { trigger: '#section-testimonials', leftPct: '0%', scale: 0.7, opacity: 0.55 },
-
-      // CTA: content LEFT → orb RIGHT, big dramatic switch back
-      { trigger: '#section-cta', leftPct: '55%', scale: 0.85, opacity: 0.65 },
-    ];
-
-    // Helper to animate orb to a position with smooth transition
-    function moveOrb(leftPct, opacity, scale) {
+    // Smooth mover — all transitions use the same easing for consistency
+    let currentOrbTarget = ORB_RIGHT;
+    function moveOrb(left, opacity, scale, dur) {
+      if (left === currentOrbTarget) return; // Don't re-trigger same position
+      currentOrbTarget = left;
       gsap.to(orbWrapper, {
-        left: leftPct,
+        left: left,
         opacity: opacity,
-        duration: 1,
-        ease: 'power2.inOut',
+        duration: dur || 1.2,
+        ease: 'power3.inOut',
+        overwrite: 'auto',
         onUpdate: () => window.orbResize?.(),
       });
-      // Smooth scale via the Three.js API
       window.orbVisualizer?.setScale(scale);
     }
 
-    sections.forEach(({ trigger, leftPct, scale, opacity }) => {
-      const el = document.querySelector(trigger);
-      if (!el) return;
+    // Unified scroll listener: determine active section by which one
+    // occupies the most viewport area, then move the orb accordingly.
+    // This avoids trigger-ordering conflicts entirely.
+    const sectionConfig = [
+      { id: 'section-hero',             left: ORB_RIGHT, scale: 1,    opacity: 1,    dur: 1.0 },
+      { id: 'section-services-hscroll', left: ORB_FAR_R, scale: 0.45, opacity: 0.15, dur: 0.8 },
+      { id: 'section-stats',            left: ORB_LEFT,  scale: 0.7,  opacity: 0.5,  dur: 1.4 },
+      { id: 'section-testimonials',     left: ORB_LEFT,  scale: 0.65, opacity: 0.45, dur: 1.0 },
+      { id: 'section-cta',              left: ORB_RIGHT, scale: 0.8,  opacity: 0.55, dur: 1.4 },
+    ];
 
-      ScrollTrigger.create({
-        trigger: el,
-        start: 'top center',
-        end: 'bottom center',
-        onEnter: () => moveOrb(leftPct, opacity, scale),
-        onEnterBack: () => moveOrb(leftPct, opacity, scale),
-      });
+    let lastActiveSection = 'section-hero';
+
+    function updateOrbForScroll() {
+      const vh = window.innerHeight;
+      let bestSection = null;
+      let bestCoverage = 0;
+
+      for (const cfg of sectionConfig) {
+        const el = document.getElementById(cfg.id);
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        // How much of this section is visible in the viewport?
+        const visTop = Math.max(0, rect.top);
+        const visBot = Math.min(vh, rect.bottom);
+        const coverage = Math.max(0, visBot - visTop);
+        if (coverage > bestCoverage) {
+          bestCoverage = coverage;
+          bestSection = cfg;
+        }
+      }
+
+      if (bestSection && bestSection.id !== lastActiveSection) {
+        lastActiveSection = bestSection.id;
+        moveOrb(bestSection.left, bestSection.opacity, bestSection.scale, bestSection.dur);
+      }
+    }
+
+    // Run on every scroll tick via ScrollTrigger
+    ScrollTrigger.addEventListener('refresh', updateOrbForScroll);
+    ScrollTrigger.create({
+      trigger: document.body,
+      start: 'top top',
+      end: 'bottom bottom',
+      onUpdate: updateOrbForScroll,
     });
 
-    // Fade orb out gracefully near footer
+    // Fade out near footer
     const footer = document.getElementById('main-footer');
     if (footer) {
       ScrollTrigger.create({
@@ -86,7 +110,7 @@ function initScrollDynamics() {
         end: 'top 50%',
         scrub: true,
         onUpdate: (self) => {
-          gsap.set(orbWrapper, { opacity: 0.65 * (1 - self.progress) });
+          gsap.set(orbWrapper, { opacity: 0.55 * (1 - self.progress) });
         },
       });
     }

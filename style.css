@@ -450,8 +450,8 @@ main {
 .hero__content--left {
   position: relative;
   z-index: 2;
-  flex: 1 1 55%;
-  max-width: 620px;
+  flex: 1 1 58%;
+  max-width: 680px;
 }
 
 .hero__content--left .hero__desc {
@@ -463,7 +463,7 @@ main {
 }
 
 .hero__orb-placeholder {
-  flex: 1 1 45%;
+  flex: 1 1 38%;
   min-height: 400px;
 }
 
@@ -539,13 +539,13 @@ main {
 
 .split-layout__content {
   position: relative;
-  flex: 1 1 55%;
-  max-width: 55%;
+  flex: 1 1 58%;
+  max-width: 58%;
   z-index: 3;
 }
 
 .split-layout__orb-space {
-  flex: 1 1 40%;
+  flex: 1 1 36%;
   min-height: 280px;
 }
 
@@ -814,9 +814,9 @@ main {
 #orb-viewport-wrapper {
   position: fixed;
   top: 0;
-  left: 55%;
+  left: 60%;
   right: auto;
-  width: 45vw;
+  width: 38vw;
   height: 100vh;
   z-index: 2;
   pointer-events: none;
