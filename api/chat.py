@@ -71,14 +71,19 @@ class handler(BaseHTTPRequestHandler):
                     if text:
                         break
                 except HTTPError as e:
-                    last_error = f"{model}: HTTP {e.code}"
+                    err_body = ''
+                    try:
+                        err_body = e.read().decode()[:200]
+                    except Exception:
+                        pass
+                    last_error = f"{model}: HTTP {e.code} {err_body}"
                     continue
                 except Exception as e:
-                    last_error = f"{model}: {str(e)[:50]}"
+                    last_error = f"{model}: {str(e)[:100]}"
                     continue
 
             if not text:
-                text = f"Steve's brain hit a snag ({last_error}). Try again in a sec?"
+                text = f"Steve's brain hit a snag. Try again in a sec?"
 
             self._respond(200, {"response": text})
 
