@@ -6,7 +6,10 @@
  */
 
 // === API Configuration ===
-const API = "__PORT_8000__".startsWith("__") ? "http://localhost:8000" : "__PORT_8000__";
+// On Vercel, API routes are same-origin at /api/*. Locally, fall back to port 8000.
+const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:8000'
+  : '';  // Same origin — /api/chat, /api/tts etc. served by Vercel serverless functions
 
 // === DOM References ===
 const micBtn = document.getElementById('steve-mic-btn');

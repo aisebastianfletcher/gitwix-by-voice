@@ -73,7 +73,9 @@ window.addEventListener('scroll', () => {
 // === Form Handling ===
 const form = document.getElementById('booking-form');
 const formStatus = document.getElementById('form-status');
-const API = "__PORT_8000__".startsWith("__") ? "http://localhost:8000" : "__PORT_8000__";
+const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:8000'
+  : '';
 
 if (form) {
   form.addEventListener('submit', async (e) => {
