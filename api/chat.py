@@ -6,7 +6,8 @@ from http.server import BaseHTTPRequestHandler
 import anthropic
 
 
-client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
+api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+client = anthropic.Anthropic(api_key=api_key) if api_key else None
 
 
 class handler(BaseHTTPRequestHandler):
@@ -29,14 +30,31 @@ class handler(BaseHTTPRequestHandler):
             if not claude_messages:
                 claude_messages = [{"role": "user", "content": "Hello"}]
 
-            response = client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=400,
-                system=system,
-                messages=claude_messages,
-            )
+            if not client:
+                raise ValueError("ANTHROPIC_API_KEY not set")
 
-            text = response.content[0].text if response.content else "Sorry, I blanked out for a second there."
+            # Try models in order of preference
+            models = ["claude-sonnet-4-6", "claude-sonnet-4-5-20250929", "claude-3-5-sonnet-20241022"]
+            text = None
+            last_err = None
+
+            for model in models:
+                try:
+                    response = client.messages.create(
+                        model=model,
+                        max_tokens=400,
+                        system=system,
+                        messages=claude_messages,
+                    )
+                    text = response.content[0].text if response.content else None
+                    if text:
+                        break
+                except Exception as model_err:
+                    last_err = model_err
+                    continue
+
+            if not text:
+                text = "Sorry, I blanked out for a second there."
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -47,12 +65,13 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"response": text}).encode())
 
         except Exception as e:
+            err_msg = str(e)
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
             self.wfile.write(json.dumps({
-                "response": "Ah, my brain just did a 500. Give me a moment and try again."
+                "response": f"Steve's having a moment — {err_msg[:80]}. Try again?"
             }).encode())
 
     def do_OPTIONS(self):
