@@ -83,7 +83,7 @@ class handler(BaseHTTPRequestHandler):
                     continue
 
             if not text:
-                text = f"Steve's brain hit a snag. Try again in a sec?"
+                text = f"Steve debug: {last_error[:150]}"
 
             self._respond(200, {"response": text})
 
