@@ -604,32 +604,32 @@ function stopListening() {
   }
 }
 
-// === Activate Steve — Start the Conversation ===
-async function activateSteve() {
-  if (conversationActive) return;
-
-  // Request microphone permission explicitly before starting
+// === Request Mic Permission (non-blocking — doesn't prevent Steve from speaking) ===
+async function requestMicPermission() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    // Permission granted — stop the stream immediately (we use SpeechRecognition, not raw audio)
     stream.getTracks().forEach(t => t.stop());
+    console.log('Mic permission granted');
+    return true;
   } catch (err) {
-    console.warn('Mic permission denied:', err);
-    updateStatus('Please allow microphone access to talk to Steve');
-    // Show a helpful message based on the error
+    console.warn('Mic permission issue:', err.name, err.message);
+    // Show helpful status but DON'T block Steve
     if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
       updateStatus('Mic blocked — click the lock icon in your address bar to allow');
     } else if (err.name === 'NotFoundError') {
-      updateStatus('No microphone found — please connect one and try again');
+      updateStatus('No microphone found — Steve can still talk to you');
     } else {
-      updateStatus('Mic unavailable — check your browser settings');
+      updateStatus('Mic not available — Steve can still talk to you');
     }
-    // Pulse the status briefly so the user sees it
     micBtn.classList.add('steve-mic-btn--error');
     setTimeout(() => micBtn.classList.remove('steve-mic-btn--error'), 3000);
-    return; // Don't activate without mic
+    return false;
   }
+}
 
+// === Activate Steve — Start the Conversation ===
+async function activateSteve() {
+  if (conversationActive) return;
   conversationActive = true;
 
   // Resume audio context (required for autoplay policy)
@@ -640,14 +640,17 @@ async function activateSteve() {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
 
-  // Steve greets
+  // Steve greets FIRST (don't wait for mic permission)
   if (!hasGreeted) {
     hasGreeted = true;
     const greeting = "Hey there! I'm Steve from Gitwix. What brings you to our corner of the internet today?";
     conversationHistory.push({ role: 'assistant', content: greeting });
     await speakText(greeting);
-    // Listening auto-starts after speakText finishes
-  } else {
+  }
+
+  // THEN request mic permission (non-blocking)
+  const micGranted = await requestMicPermission();
+  if (micGranted) {
     startContinuousListening();
   }
 
@@ -682,10 +685,17 @@ function updateStatus(text) {
 
 // === Event Listeners ===
 
-// Mic button: toggle conversation on/off
+// Mic button: toggle conversation on/off, or re-request mic if already active but mic denied
 micBtn.addEventListener('click', () => {
   if (conversationActive) {
-    deactivateSteve();
+    // If already active but not listening (mic was denied), retry mic permission
+    if (!isListening && !isSpeaking && !isProcessing) {
+      requestMicPermission().then(granted => {
+        if (granted) startContinuousListening();
+      });
+    } else {
+      deactivateSteve();
+    }
   } else {
     activateSteve();
   }
@@ -710,6 +720,120 @@ if (emailOverlay) {
 if ('speechSynthesis' in window) {
   speechSynthesis.getVoices();
   speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+}
+
+// === AUTO-GREET: Steve speaks within 1 second of page load ===
+// Strategy: Try to auto-play speech immediately. If browser blocks it
+// (autoplay policy), fall back to speechSynthesis, then to first-interaction trigger.
+
+const AUTO_GREETING = "Hey there! I'm Steve from Gitwix. What brings you to our corner of the internet today?";
+
+async function autoGreetSteve() {
+  if (hasGreeted || conversationActive) return;
+
+  hasGreeted = true;
+  conversationActive = true;
+  conversationHistory.push({ role: 'assistant', content: AUTO_GREETING });
+
+  // Try ElevenLabs TTS first (best quality)
+  try {
+    const res = await fetch(`${API}/api/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: AUTO_GREETING }),
+    });
+
+    if (res.ok) {
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      currentAudio = audio;
+
+      isSpeaking = true;
+      updateStatus('Steve is speaking...');
+
+      // Try to play — may fail due to autoplay policy
+      await audio.play();
+
+      // If we get here, autoplay worked — set up orb analysis
+      setupOrbAudioAnalysis(audio);
+
+      await new Promise(resolve => {
+        audio.onended = () => {
+          isSpeaking = false;
+          window.orbVisualizer?.setActive(false);
+          URL.revokeObjectURL(url);
+          currentAudio = null;
+          updateStatus('');
+          resolve();
+        };
+      });
+
+      // After greeting, request mic
+      postGreetingSetup();
+      return; // Success
+    }
+  } catch (err) {
+    console.log('ElevenLabs autoplay blocked or failed, trying speechSynthesis:', err.name);
+    isSpeaking = false;
+    currentAudio = null;
+  }
+
+  // Fallback: Try browser speechSynthesis (more permissive autoplay)
+  try {
+    // Wrap in a timeout — if speechSynthesis hangs or doesn't fire, bail out
+    await Promise.race([
+      fallbackSpeak(AUTO_GREETING),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('speechSynthesis timeout')), 6000)),
+    ]);
+    postGreetingSetup();
+    return; // Success with fallback
+  } catch (err) {
+    console.log('speechSynthesis also failed/timed out:', err.message);
+    isSpeaking = false;
+  }
+
+  // Last resort: wait for first user interaction, then greet
+  hasGreeted = false; // Reset so activateSteve can greet
+  conversationActive = false;
+  conversationHistory.pop(); // Remove the greeting we added
+  setupFirstInteractionGreeting();
+}
+
+function postGreetingSetup() {
+  // Request mic permission after greeting
+  requestMicPermission().then(granted => {
+    if (granted) startContinuousListening();
+  });
+  micBtn.classList.add('steve-mic-btn--active');
+  resetPauseTimer();
+}
+
+function setupFirstInteractionGreeting() {
+  // If autoplay is completely blocked, greet on first interaction
+  const events = ['click', 'touchstart', 'scroll', 'keydown'];
+  let triggered = false;
+
+  function onFirstInteraction() {
+    if (triggered) return;
+    triggered = true;
+    events.forEach(evt => document.removeEventListener(evt, onFirstInteraction, { capture: true }));
+    // Small delay so the interaction doesn't feel jarring
+    setTimeout(() => activateSteve(), 200);
+  }
+
+  events.forEach(evt => {
+    document.addEventListener(evt, onFirstInteraction, { capture: true, once: false, passive: true });
+  });
+}
+
+// Fire auto-greet shortly after page loads (give DOM/fonts/orb time to initialize)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(autoGreetSteve, 800);
+  });
+} else {
+  setTimeout(autoGreetSteve, 800);
 }
 
 // === Export for orb.js ===
