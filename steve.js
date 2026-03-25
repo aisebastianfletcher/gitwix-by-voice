@@ -725,119 +725,124 @@ if ('speechSynthesis' in window) {
   speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
 }
 
-// === AUTO-GREET: Steve speaks within 1 second of page load ===
-// Strategy: Try to auto-play speech immediately. If browser blocks it
-// (autoplay policy), fall back to speechSynthesis, then to first-interaction trigger.
+// === INTRO PAGE INTEGRATION ===
+// The intro splash page pre-fetches Steve's greeting audio.
+// When the user clicks "Enter Gitwix", we:
+//   1. Request mic permission (the click unlocks browser audio + mic)
+//   2. Play the pre-loaded greeting INSTANTLY (zero delay)
+//   3. Fade out the intro to reveal the site
+//   4. Start continuous listening after greeting finishes
 
-const AUTO_GREETING = "Hey there! I'm Steve from Gitwix. What brings you to our corner of the internet today?";
+const GREETING_TEXT = "Hey there! I'm Steve from Gitwix. What brings you to our corner of the internet today?";
+let preloadedGreetingAudio = null;
+let preloadedGreetingUrl = null;
 
-async function autoGreetSteve() {
-  if (hasGreeted || conversationActive) return;
-
-  hasGreeted = true;
-  conversationActive = true;
-  conversationHistory.push({ role: 'assistant', content: AUTO_GREETING });
-
-  // Try ElevenLabs TTS first (best quality)
+// Pre-fetch greeting TTS while user sees the intro page
+async function preloadGreeting() {
+  const statusEl = document.getElementById('intro-preload-status');
   try {
+    if (statusEl) statusEl.textContent = '';
     const res = await fetch(`${API}/api/tts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: AUTO_GREETING }),
+      body: JSON.stringify({ text: GREETING_TEXT }),
     });
-
     if (res.ok) {
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      currentAudio = audio;
+      preloadedGreetingUrl = URL.createObjectURL(blob);
+      preloadedGreetingAudio = new Audio(preloadedGreetingUrl);
+      // Pre-decode the audio so it plays instantly
+      preloadedGreetingAudio.preload = 'auto';
+      if (statusEl) statusEl.textContent = '';
+      console.log('Steve greeting pre-loaded and ready');
+    }
+  } catch (err) {
+    console.warn('Greeting pre-load failed, will use browser TTS:', err);
+  }
+}
 
+// Called when user clicks "Enter Gitwix" on the intro page
+async function enterSite() {
+  const splash = document.getElementById('intro-splash');
+  const mainSite = document.getElementById('main-site');
+  const enterBtn = document.getElementById('intro-enter-btn');
+
+  if (enterBtn) enterBtn.disabled = true;
+
+  // 1. Request mic permission (the button click is the user gesture that unlocks everything)
+  const micGranted = await requestMicPermission();
+
+  // 2. Init audio context (unlocked by user gesture)
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioContext.state === 'suspended') {
+    await audioContext.resume();
+  }
+
+  // 3. Show the main site, fade out intro
+  if (mainSite) mainSite.style.display = '';
+  if (splash) {
+    splash.classList.add('intro-splash--exiting');
+    setTimeout(() => splash.remove(), 700);
+  }
+
+  // 4. Init icons and refresh scroll
+  setTimeout(() => {
+    if (window.lucide) lucide.createIcons();
+    if (window.ScrollTrigger) ScrollTrigger.refresh();
+  }, 100);
+
+  // 5. Play greeting INSTANTLY from pre-loaded audio
+  hasGreeted = true;
+  conversationActive = true;
+  conversationHistory.push({ role: 'assistant', content: GREETING_TEXT });
+
+  if (preloadedGreetingAudio) {
+    try {
       isSpeaking = true;
       updateStatus('Steve is speaking...');
+      currentAudio = preloadedGreetingAudio;
 
-      // Try to play — may fail due to autoplay policy
-      await audio.play();
-
-      // If we get here, autoplay worked — set up orb analysis
-      setupOrbAudioAnalysis(audio);
+      setupOrbAudioAnalysis(preloadedGreetingAudio);
+      await preloadedGreetingAudio.play();
 
       await new Promise(resolve => {
-        audio.onended = () => {
+        preloadedGreetingAudio.onended = () => {
           isSpeaking = false;
           window.orbVisualizer?.setActive(false);
-          URL.revokeObjectURL(url);
+          if (preloadedGreetingUrl) URL.revokeObjectURL(preloadedGreetingUrl);
           currentAudio = null;
           updateStatus('');
           resolve();
         };
       });
-
-      // After greeting, request mic
-      postGreetingSetup();
-      return; // Success
+    } catch (err) {
+      console.warn('Pre-loaded audio failed, trying browser TTS:', err);
+      isSpeaking = false;
+      await fallbackSpeak(GREETING_TEXT);
     }
-  } catch (err) {
-    console.log('ElevenLabs autoplay blocked or failed, trying speechSynthesis:', err.name);
-    isSpeaking = false;
-    currentAudio = null;
+  } else {
+    // Fallback if pre-load failed
+    await fallbackSpeak(GREETING_TEXT);
   }
 
-  // Fallback: Try browser speechSynthesis (more permissive autoplay)
-  try {
-    // Wrap in a timeout — if speechSynthesis hangs or doesn't fire, bail out
-    await Promise.race([
-      fallbackSpeak(AUTO_GREETING),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('speechSynthesis timeout')), 6000)),
-    ]);
-    postGreetingSetup();
-    return; // Success with fallback
-  } catch (err) {
-    console.log('speechSynthesis also failed/timed out:', err.message);
-    isSpeaking = false;
+  // 6. Start listening
+  if (micGranted) {
+    startContinuousListening();
   }
-
-  // Last resort: wait for first user interaction, then greet
-  hasGreeted = false; // Reset so activateSteve can greet
-  conversationActive = false;
-  conversationHistory.pop(); // Remove the greeting we added
-  setupFirstInteractionGreeting();
-}
-
-function postGreetingSetup() {
-  // Request mic permission after greeting
-  requestMicPermission().then(granted => {
-    if (granted) startContinuousListening();
-  });
   micBtn.classList.add('steve-mic-btn--active');
   resetPauseTimer();
 }
 
-function setupFirstInteractionGreeting() {
-  // If autoplay is completely blocked, greet on first interaction
-  const events = ['click', 'touchstart', 'scroll', 'keydown'];
-  let triggered = false;
-
-  function onFirstInteraction() {
-    if (triggered) return;
-    triggered = true;
-    events.forEach(evt => document.removeEventListener(evt, onFirstInteraction, { capture: true }));
-    // Small delay so the interaction doesn't feel jarring
-    setTimeout(() => activateSteve(), 200);
-  }
-
-  events.forEach(evt => {
-    document.addEventListener(evt, onFirstInteraction, { capture: true, once: false, passive: true });
-  });
+// Wire up the intro button
+const introBtn = document.getElementById('intro-enter-btn');
+if (introBtn) {
+  introBtn.addEventListener('click', enterSite);
 }
 
-// Fire auto-greet shortly after page loads (give DOM/fonts/orb time to initialize)
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(autoGreetSteve, 800);
-  });
-} else {
-  setTimeout(autoGreetSteve, 800);
-}
+// Start pre-loading the greeting audio immediately
+preloadGreeting();
 
 // === Export for orb.js ===
 export { };

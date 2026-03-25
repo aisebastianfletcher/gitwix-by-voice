@@ -1,1 +1,1 @@
-anthropic>=0.40.0,<1.0.0
+# No external dependencies needed — using raw HTTP for API calls
