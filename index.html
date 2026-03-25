@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+   ______                            __
+  / ____/___  ____ ___  ____  __  __/ /____  _____
+ / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+                    /_/
+        Created with Perplexity Computer
+        https://www.perplexity.ai/computer
+-->
+
+<!-- Perplexity Computer Attribution — SEO Meta Tags -->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gitwix — Bespoke Web Development Agency</title>
+<meta name="description" content="Gitwix builds bespoke, high-performance websites and web applications. Meet Steve, our AI concierge who navigates our site for you.">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=switzer@300,400,500,600,700&display=swap" rel="stylesheet">
+
+<!-- Icons -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+<!-- Styles -->
+<link rel="stylesheet" href="./base.css">
+<link rel="stylesheet" href="./style.css">
+
+<!-- Three.js -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <!-- ====== NAVIGATION ====== -->
+  <nav class="nav" id="main-nav" role="navigation" aria-label="Main navigation">
+    <div class="container nav__inner">
+      <a href="#" class="nav__logo" id="nav-logo" data-page="home">
+        <img src="./assets/logo.png" alt="Gitwix logo" width="36" height="36">
+        <span class="nav__logo-text">GITWIX</span>
+      </a>
+      <button class="nav__toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav__links" id="nav-links" role="list">
+        <li><a href="#" class="nav__link nav__link--active" id="nav-home" data-page="home">Home</a></li>
+        <li><a href="#" class="nav__link" id="nav-about" data-page="about">About</a></li>
+        <li><a href="#" class="nav__link" id="nav-portfolio" data-page="portfolio">Portfolio</a></li>
+        <li><a href="#" class="nav__link" id="nav-contact" data-page="contact">Contact</a></li>
+        <li><a href="#" class="btn nav__cta" id="nav-talk-to-steve" data-action="activate-steve">Talk to Steve</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ====== MAIN CONTENT ====== -->
+  <main>
+
+    <!-- ==================== HOME PAGE ==================== -->
+    <div class="page page--active" id="page-home">
+
+      <!-- Hero -->
+      <section class="section section--hero" id="section-hero">
+        <div class="container hero">
+          <div class="hero__orb-container" id="orb-hero-anchor"></div>
+          <div class="hero__content">
+            <div class="hero__badge" id="hero-badge">
+              <span class="hero__badge-dot"></span>
+              Steve is online
+            </div>
+            <h1 class="hero__title" id="hero-title">
+              Bespoke web,<br><em>beautifully</em> crafted.
+            </h1>
+            <p class="hero__desc" id="hero-desc">
+              We design and build premium websites that convert. Our AI concierge Steve is here to guide you — just ask.
+            </p>
+            <div class="hero__actions" id="hero-actions">
+              <button class="btn btn--primary" id="btn-view-work" data-page="portfolio">
+                <i data-lucide="eye" style="width:16px;height:16px"></i>
+                View our work
+              </button>
+              <button class="btn btn--outline" id="btn-talk-steve" data-action="activate-steve">
+                <i data-lucide="mic" style="width:16px;height:16px"></i>
+                Talk to Steve
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Services -->
+      <section class="section" id="section-services">
+        <div class="container">
+          <div class="text-center mb-8">
+            <span class="section__label" id="services-label">What we do</span>
+            <h2 class="section__title" id="services-title">Crafted with precision,<br>delivered with care.</h2>
+            <p class="section__subtitle mx-auto" id="services-subtitle">
+              From concept to deployment, we handle every pixel and every line of code.
+            </p>
+          </div>
+          <div class="grid-3" id="services-grid">
+            <div class="card card--interactive fade-in" id="service-design">
+              <div class="card__icon"><i data-lucide="palette" style="width:24px;height:24px"></i></div>
+              <h3 class="card__title">UI/UX Design</h3>
+              <p class="card__text">Intuitive interfaces that feel effortless. We obsess over every interaction so your users don't have to think twice.</p>
+            </div>
+            <div class="card card--interactive fade-in" id="service-development">
+              <div class="card__icon"><i data-lucide="code-2" style="width:24px;height:24px"></i></div>
+              <h3 class="card__title">Web Development</h3>
+              <p class="card__text">Clean, performant code that scales. React, Next.js, TypeScript — whatever your stack needs, we build it right.</p>
+            </div>
+            <div class="card card--interactive fade-in" id="service-ai">
+              <div class="card__icon"><i data-lucide="brain-circuit" style="width:24px;height:24px"></i></div>
+              <h3 class="card__title">AI Integration</h3>
+              <p class="card__text">Intelligent features that set you apart. Voice agents, chatbots, automation — we make AI feel natural.</p>
+            </div>
+            <div class="card card--interactive fade-in" id="service-ecommerce">
+              <div class="card__icon"><i data-lucide="shopping-bag" style="width:24px;height:24px"></i></div>
+              <h3 class="card__title">E-Commerce</h3>
+              <p class="card__text">Storefronts that sell. Stripe-integrated, conversion-optimised, and built to handle your growth.</p>
+            </div>
+            <div class="card card--interactive fade-in" id="service-seo">
+              <div class="card__icon"><i data-lucide="search" style="width:24px;height:24px"></i></div>
+              <h3 class="card__title">SEO &amp; Performance</h3>
+              <p class="card__text">100/100 Lighthouse scores aren't a goal — they're our baseline. Every site ships fast, accessible, and discoverable.</p>
+            </div>
+            <div class="card card--interactive fade-in" id="service-maintenance">
+              <div class="card__icon"><i data-lucide="shield-check" style="width:24px;height:24px"></i></div>
+              <h3 class="card__title">Ongoing Support</h3>
+              <p class="card__text">We don't disappear after launch. Monthly retainers keep your site secure, updated, and performing at its peak.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <section class="section" id="section-stats">
+        <div class="container">
+          <div class="stats" id="stats-grid">
+            <div class="stat fade-in" id="stat-projects">
+              <div class="stat__number" data-count="87">87+</div>
+              <div class="stat__label">Projects Delivered</div>
+            </div>
+            <div class="stat fade-in" id="stat-clients">
+              <div class="stat__number" data-count="35">35+</div>
+              <div class="stat__label">Happy Clients</div>
+            </div>
+            <div class="stat fade-in" id="stat-score">
+              <div class="stat__number">100</div>
+              <div class="stat__label">Lighthouse Score</div>
+            </div>
+            <div class="stat fade-in" id="stat-conversion">
+              <div class="stat__number">35%</div>
+              <div class="stat__label">Avg. Conversion Lift</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Testimonials -->
+      <section class="section" id="section-testimonials">
+        <div class="container">
+          <div class="text-center mb-8">
+            <span class="section__label" id="testimonials-label">Client Stories</span>
+            <h2 class="section__title" id="testimonials-title">Trusted by founders &amp; teams.</h2>
+          </div>
+          <div class="grid-2" id="testimonials-grid">
+            <div class="testimonial fade-in" id="testimonial-1">
+              <p class="testimonial__quote">Gitwix didn't just build our website — they understood our vision and translated it into something our customers love. The AI features blew our minds.</p>
+              <div class="testimonial__author">Sarah Chen</div>
+              <div class="testimonial__role">CEO, NovaTech Solutions</div>
+            </div>
+            <div class="testimonial fade-in" id="testimonial-2">
+              <p class="testimonial__quote">Working with the Gitwix team was like having a senior engineering department on speed dial. Fast, precise, and they actually listen.</p>
+              <div class="testimonial__author">Marcus Webb</div>
+              <div class="testimonial__role">Founder, Ridgeline Ventures</div>
+            </div>
+            <div class="testimonial fade-in" id="testimonial-3">
+              <p class="testimonial__quote">Our conversion rate jumped 42% within a month of launching the new site. The ROI speaks for itself.</p>
+              <div class="testimonial__author">Priya Patel</div>
+              <div class="testimonial__role">Marketing Director, Kōda Studio</div>
+            </div>
+            <div class="testimonial fade-in" id="testimonial-4">
+              <p class="testimonial__quote">Steve, the AI concierge, is genuinely impressive. Our visitors spend 3x longer on the site because they love interacting with him.</p>
+              <div class="testimonial__author">James O'Sullivan</div>
+              <div class="testimonial__role">CTO, Beacon Digital</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section class="section" id="section-cta" style="background: var(--color-surface);">
+        <div class="container text-center">
+          <h2 class="section__title" id="cta-title">Ready to build something<br><em style="font-style:italic;color:var(--color-primary)">extraordinary</em>?</h2>
+          <p class="section__subtitle mx-auto" id="cta-subtitle">Book a free consultation. Or better yet, just ask Steve.</p>
+          <div class="hero__actions" id="cta-actions">
+            <button class="btn btn--primary" id="btn-cta-book" data-page="contact">
+              <i data-lucide="calendar" style="width:16px;height:16px"></i>
+              Book a consultation
+            </button>
+            <button class="btn btn--outline" id="btn-cta-steve" data-action="activate-steve">
+              <i data-lucide="mic" style="width:16px;height:16px"></i>
+              Ask Steve
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== ABOUT PAGE ==================== -->
+    <div class="page" id="page-about">
+      <section class="section" id="section-about-hero">
+        <div class="container">
+          <span class="section__label" id="about-label">About Gitwix</span>
+          <h1 class="section__title section__title--hero" id="about-title">We're the team behind<br>your next big thing.</h1>
+          <p class="section__subtitle" id="about-subtitle">Founded in Manchester, Gitwix is a premium web development agency that blends technical precision with creative vision. We build websites that work as hard as you do.</p>
+        </div>
+      </section>
+
+      <section class="section" id="section-about-story">
+        <div class="container">
+          <div class="about-split">
+            <div>
+              <span class="section__label">Our Story</span>
+              <h2 class="section__title" id="about-story-title">Born from frustration,<br>built on standards.</h2>
+              <p class="section__subtitle" id="about-story-text">
+                We started Gitwix because we were tired of seeing businesses get shortchanged by cookie-cutter websites. Every project we take on gets the same treatment: bespoke design, clean code, obsessive attention to detail, and an AI-first approach that puts us years ahead of the competition.
+              </p>
+              <p class="section__subtitle" id="about-story-text-2" style="margin-top: var(--space-4);">
+                We're not a factory. We're craftspeople. And Steve — our AI concierge — is proof that we practice what we preach.
+              </p>
+            </div>
+            <div class="about-values" id="about-values-grid">
+              <div class="value-item fade-in" id="value-craft">
+                <div class="value-item__icon"><i data-lucide="gem" style="width:24px;height:24px"></i></div>
+                <div>
+                  <div class="value-item__title">Craftsmanship</div>
+                  <div class="value-item__text">Every pixel is intentional. We don't cut corners.</div>
+                </div>
+              </div>
+              <div class="value-item fade-in" id="value-performance">
+                <div class="value-item__icon"><i data-lucide="zap" style="width:24px;height:24px"></i></div>
+                <div>
+                  <div class="value-item__title">Performance</div>
+                  <div class="value-item__text">Speed isn't a feature — it's the foundation.</div>
+                </div>
+              </div>
+              <div class="value-item fade-in" id="value-innovation">
+                <div class="value-item__icon"><i data-lucide="lightbulb" style="width:24px;height:24px"></i></div>
+                <div>
+                  <div class="value-item__title">Innovation</div>
+                  <div class="value-item__text">AI-first thinking in everything we build.</div>
+                </div>
+              </div>
+              <div class="value-item fade-in" id="value-honesty">
+                <div class="value-item__icon"><i data-lucide="heart-handshake" style="width:24px;height:24px"></i></div>
+                <div>
+                  <div class="value-item__title">Honesty</div>
+                  <div class="value-item__text">We tell you what you need, not what you want to hear.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="section-about-tech" style="background: var(--color-surface);">
+        <div class="container text-center">
+          <span class="section__label">Our Stack</span>
+          <h2 class="section__title" id="about-tech-title">Built with the best tools.</h2>
+          <p class="section__subtitle mx-auto" id="about-tech-subtitle">We pick the right tool for the job — not the trendy one.</p>
+          <div class="grid-3 mt-8" id="tech-grid">
+            <div class="card fade-in" id="tech-frontend">
+              <h3 class="card__title">Front-End</h3>
+              <p class="card__text">React, Next.js, TypeScript, Three.js, Tailwind, GSAP — pixel-perfect UIs that perform.</p>
+            </div>
+            <div class="card fade-in" id="tech-backend">
+              <h3 class="card__title">Back-End</h3>
+              <p class="card__text">Node.js, Python, FastAPI, PostgreSQL, Redis — scalable, secure, and reliable.</p>
+            </div>
+            <div class="card fade-in" id="tech-ai">
+              <h3 class="card__title">AI &amp; Automation</h3>
+              <p class="card__text">OpenAI, LiveKit, LangChain, custom voice agents — intelligence baked into every layer.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== PORTFOLIO PAGE ==================== -->
+    <div class="page" id="page-portfolio">
+      <section class="section" id="section-portfolio-hero">
+        <div class="container">
+          <span class="section__label" id="portfolio-label">Our Work</span>
+          <h1 class="section__title section__title--hero" id="portfolio-title">Projects we're proud of.</h1>
+          <p class="section__subtitle" id="portfolio-subtitle">Each project is a partnership. Here's what happens when ambition meets execution.</p>
+        </div>
+      </section>
+
+      <section class="section" id="section-portfolio-grid" style="padding-top: 0;">
+        <div class="container">
+          <div class="portfolio-grid" id="portfolio-cards">
+            <div class="portfolio-card fade-in" id="project-1">
+              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #2a2520 0%, #5a534c 100%); display:flex; align-items:center; justify-content:center;">
+                <span style="font-family:var(--font-display); font-size:var(--text-xl); color:var(--color-primary-light); opacity:0.6;">NovaTech</span>
+              </div>
+              <div class="portfolio-card__overlay">
+                <div class="portfolio-card__title">NovaTech Solutions</div>
+                <div class="portfolio-card__tag">SaaS Platform &bull; Full Redesign</div>
+              </div>
+            </div>
+            <div class="portfolio-card fade-in" id="project-2">
+              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #3B3530 0%, #B8943F 100%); display:flex; align-items:center; justify-content:center;">
+                <span style="font-family:var(--font-display); font-size:var(--text-xl); color:#FAF8F4; opacity:0.6;">Ridgeline</span>
+              </div>
+              <div class="portfolio-card__overlay">
+                <div class="portfolio-card__title">Ridgeline Ventures</div>
+                <div class="portfolio-card__tag">Investment Portal &bull; Web App</div>
+              </div>
+            </div>
+            <div class="portfolio-card fade-in" id="project-3">
+              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #F5F2EC 0%, #DDD8CE 100%); display:flex; align-items:center; justify-content:center;">
+                <span style="font-family:var(--font-display); font-size:var(--text-xl); color:var(--color-ink); opacity:0.5;">Kōda</span>
+              </div>
+              <div class="portfolio-card__overlay">
+                <div class="portfolio-card__title">Kōda Studio</div>
+                <div class="portfolio-card__tag">E-Commerce &bull; Shopify Custom</div>
+              </div>
+            </div>
+            <div class="portfolio-card fade-in" id="project-4">
+              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display:flex; align-items:center; justify-content:center;">
+                <span style="font-family:var(--font-display); font-size:var(--text-xl); color:#4a9fd5; opacity:0.6;">Beacon</span>
+              </div>
+              <div class="portfolio-card__overlay">
+                <div class="portfolio-card__title">Beacon Digital</div>
+                <div class="portfolio-card__tag">AI Dashboard &bull; React + Python</div>
+              </div>
+            </div>
+            <div class="portfolio-card fade-in" id="project-5">
+              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #2d4a3e 0%, #1a3028 100%); display:flex; align-items:center; justify-content:center;">
+                <span style="font-family:var(--font-display); font-size:var(--text-xl); color:#7bc89c; opacity:0.6;">Evergreen</span>
+              </div>
+              <div class="portfolio-card__overlay">
+                <div class="portfolio-card__title">Evergreen Health</div>
+                <div class="portfolio-card__tag">Healthcare Portal &bull; PWA</div>
+              </div>
+            </div>
+            <div class="portfolio-card fade-in" id="project-6">
+              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #3a1c4f 0%, #6b3fa0 100%); display:flex; align-items:center; justify-content:center;">
+                <span style="font-family:var(--font-display); font-size:var(--text-xl); color:#c89fff; opacity:0.6;">Lyric</span>
+              </div>
+              <div class="portfolio-card__overlay">
+                <div class="portfolio-card__title">Lyric Music</div>
+                <div class="portfolio-card__tag">Streaming Platform &bull; Full Stack</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section text-center" id="section-portfolio-cta" style="background: var(--color-surface);">
+        <div class="container">
+          <h2 class="section__title" id="portfolio-cta-title">Want to see yours here?</h2>
+          <p class="section__subtitle mx-auto">Let's talk about your next project. Steve's always happy to help.</p>
+          <div class="hero__actions mt-8">
+            <button class="btn btn--primary" id="btn-portfolio-contact" data-page="contact">
+              <i data-lucide="calendar" style="width:16px;height:16px"></i>
+              Start a project
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== CONTACT PAGE ==================== -->
+    <div class="page" id="page-contact">
+      <section class="section" id="section-contact-hero">
+        <div class="container">
+          <span class="section__label" id="contact-label">Get in Touch</span>
+          <h1 class="section__title section__title--hero" id="contact-title">Let's build something together.</h1>
+          <p class="section__subtitle" id="contact-subtitle">Fill out the form below, or let Steve handle it for you conversationally.</p>
+        </div>
+      </section>
+
+      <section class="section" id="section-contact-form" style="padding-top: 0;">
+        <div class="container container--narrow">
+          <div class="card" id="contact-card" style="padding: var(--space-10);">
+            <form class="form" id="booking-form" novalidate>
+              <div class="form__group">
+                <label class="form__label" for="contact-name">Full Name</label>
+                <input class="form__input" type="text" id="contact-name" name="name" placeholder="e.g. Jane Smith" required autocomplete="name">
+              </div>
+              <div class="form__group">
+                <label class="form__label" for="contact-email">Email Address</label>
+                <input class="form__input" type="email" id="contact-email" name="email" placeholder="jane@company.com" required autocomplete="email">
+              </div>
+              <div class="form__group">
+                <label class="form__label" for="contact-company">Company (optional)</label>
+                <input class="form__input" type="text" id="contact-company" name="company" placeholder="Your company name" autocomplete="organization">
+              </div>
+              <div class="form__group">
+                <label class="form__label" for="contact-project">Tell us about your project</label>
+                <textarea class="form__textarea" id="contact-project" name="project" placeholder="What are you looking to build? Budget range? Timeline?" required></textarea>
+              </div>
+              <button type="submit" class="btn btn--primary" id="btn-submit-form" style="width:100%;">
+                <i data-lucide="send" style="width:16px;height:16px"></i>
+                Send Enquiry
+              </button>
+              <p id="form-status" style="font-size: var(--text-sm); color: var(--color-text-muted); text-align: center; display:none;"></p>
+            </form>
+          </div>
+          <div class="text-center mt-8">
+            <p style="font-size: var(--text-sm); color: var(--color-text-muted);">
+              Prefer to talk? Click the mic button and Steve will handle everything.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- ====== FOOTER ====== -->
+  <footer class="footer" id="main-footer">
+    <div class="container footer__inner">
+      <div class="footer__copy">&copy; 2026 Gitwix. All rights reserved.</div>
+      <div style="display:flex;gap:var(--space-6);">
+        <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer" class="footer__link">Created with Perplexity Computer</a>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<!-- ====== STEVE'S VIRTUAL CURSOR ====== -->
+<div id="steve-cursor">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.45 0 .67-.54.35-.85L5.85 2.36a.5.5 0 0 0-.35.85z" fill="#B8943F" stroke="#2A2520" stroke-width="1.5"/>
+  </svg>
+</div>
+
+<!-- ====== STEVE VOICE UI ====== -->
+<div class="steve-ui" id="steve-ui">
+  <div class="steve-bubble" id="steve-bubble">
+    <div class="steve-bubble__name">Steve</div>
+    <div id="steve-bubble-text">Hey there! I'm Steve, your AI concierge. Click the mic to chat with me.</div>
+  </div>
+  <div class="steve-status" id="steve-status"></div>
+  <button class="steve-mic-btn" id="steve-mic-btn" aria-label="Talk to Steve">
+    <i data-lucide="mic" style="width:24px;height:24px"></i>
+  </button>
+</div>
+
+<!-- ====== THREE.JS ORB CANVAS ====== -->
+<div id="orb-canvas-container"></div>
+
+<!-- Scripts -->
+<script type="module" src="./orb.js"></script>
+<script type="module" src="./steve.js"></script>
+<script src="./app.js" defer></script>
+</body>
+</html>
