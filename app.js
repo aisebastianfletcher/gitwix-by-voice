@@ -26,12 +26,23 @@ function navigateTo(pageId) {
     }
   });
 
-  // Scroll to top
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Scroll to top (use Lenis if available)
+  if (window._lenis) {
+    window._lenis.scrollTo(0, { immediate: true });
+  } else {
+    window.scrollTo({ top: 0 });
+  }
 
   // Close mobile nav
   navLinksContainer.classList.remove('nav__links--open');
   navToggle.setAttribute('aria-expanded', 'false');
+
+  // Refresh GSAP ScrollTrigger after page change
+  setTimeout(() => {
+    if (window.ScrollTrigger) {
+      ScrollTrigger.refresh();
+    }
+  }, 100);
 }
 
 // Nav link clicks

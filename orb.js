@@ -24,7 +24,7 @@ const renderTarget = globalContainer || container;
 // === Config ===
 const ORB_COUNT = 400;
 const SPHERE_RADIUS = 2.8;
-const IDLE_SPEED = 0.0008;
+const IDLE_SPEED = 0.00015;
 const DISPERSE_STRENGTH = 1.8;
 const RETURN_SPEED = 0.04;
 const COLOR_TRANSITION_SPEED = 0.03;
@@ -159,10 +159,12 @@ function animate() {
       targetColors[i].copy(ACTIVE_COLORS[colorIdx]);
     } else {
       // Return to sphere
+      // Gentle breathing — slow, organic drift
+      const breathPhase = time * 12;
       const idleOffset = new THREE.Vector3(
-        Math.sin(time * 60 + i * 0.5) * 0.08,
-        Math.cos(time * 80 + i * 0.7) * 0.08,
-        Math.sin(time * 70 + i * 0.3) * 0.08,
+        Math.sin(breathPhase + i * 0.5) * 0.06,
+        Math.cos(breathPhase * 0.8 + i * 0.7) * 0.06,
+        Math.sin(breathPhase * 0.9 + i * 0.3) * 0.06,
       );
       const target = base.clone().add(idleOffset);
       curr.lerp(target, RETURN_SPEED);
@@ -191,9 +193,9 @@ function animate() {
   const targetOpacity = isActive ? 0.85 : 0.35;
   orbMat.opacity += (targetOpacity - orbMat.opacity) * 0.05;
 
-  // Slow rotation
-  mesh.rotation.y = time * 30;
-  mesh.rotation.x = Math.sin(time * 15) * 0.1;
+  // Gentle breathing rotation
+  mesh.rotation.y = time * 8;
+  mesh.rotation.x = Math.sin(time * 4) * 0.06;
 
   renderer.render(scene, camera);
 }

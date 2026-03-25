@@ -1,7 +1,8 @@
 /**
- * Steve — AI Concierge for Gitwix
- * Handles: voice recognition, LLM responses, TTS playback,
- * virtual cursor animation, DOM navigation, and form filling.
+ * Steve — AI Sales Concierge for Gitwix
+ * Continuous-listening, conversational salesman mode.
+ * Handles: auto voice recognition, LLM chat, TTS, virtual cursor,
+ * pause detection, email capture, conversation state management.
  */
 
 // === API Configuration ===
@@ -9,79 +10,115 @@ const API = "__PORT_8000__".startsWith("__") ? "http://localhost:8000" : "__PORT
 
 // === DOM References ===
 const micBtn = document.getElementById('steve-mic-btn');
-const bubble = document.getElementById('steve-bubble');
-const bubbleText = document.getElementById('steve-bubble-text');
 const statusEl = document.getElementById('steve-status');
 const cursor = document.getElementById('steve-cursor');
+const emailOverlay = document.getElementById('steve-email-overlay');
+const emailInput = document.getElementById('steve-email-input');
+const emailSubmitBtn = document.getElementById('steve-email-submit');
 
 // === State ===
 let isListening = false;
 let isSpeaking = false;
+let isProcessing = false;
 let recognition = null;
 let audioContext = null;
 let analyser = null;
 let currentAudio = null;
 let conversationHistory = [];
+let conversationActive = false;   // Whether Steve is in an active conversation
+let pauseTimer = null;            // Timer for detecting silence/pauses
+let hasGreeted = false;           // Whether Steve has given his opening line
+let userHasSpoken = false;        // Whether the user has said anything yet
+let emailCaptured = false;        // Whether we already got the email
+let pauseCount = 0;               // How many pause-prompts Steve has fired
+
+const PAUSE_TIMEOUT = 10000;       // 10s of silence before Steve prompts
+const MAX_PAUSE_PROMPTS = 3;      // Don't annoy — max 3 unprompted questions
 
 // === Website DOM Map (Steve's knowledge) ===
 const DOM_MAP = {
-  // Navigation
-  'home': { selector: '#nav-home', description: 'Home page link in the navigation' },
-  'about': { selector: '#nav-about', description: 'About page link in the navigation' },
-  'portfolio': { selector: '#nav-portfolio', description: 'Portfolio page link in the navigation' },
-  'work': { selector: '#nav-portfolio', description: 'Portfolio page link in the navigation' },
-  'projects': { selector: '#nav-portfolio', description: 'Portfolio page link in the navigation' },
-  'contact': { selector: '#nav-contact', description: 'Contact page link in the navigation' },
-  'booking': { selector: '#nav-contact', description: 'Contact page link in the navigation' },
-  'book': { selector: '#nav-contact', description: 'Contact page link in the navigation' },
-
-  // Buttons
-  'view work': { selector: '#btn-view-work', description: 'View our work button on the home page' },
+  'home': { selector: '#nav-home', description: 'Home page link' },
+  'about': { selector: '#nav-about', description: 'About page link' },
+  'portfolio': { selector: '#nav-portfolio', description: 'Portfolio page link' },
+  'work': { selector: '#nav-portfolio', description: 'Portfolio page link' },
+  'projects': { selector: '#nav-portfolio', description: 'Portfolio page link' },
+  'contact': { selector: '#nav-contact', description: 'Contact page link' },
+  'booking': { selector: '#nav-contact', description: 'Contact page link' },
+  'book': { selector: '#nav-contact', description: 'Contact page link' },
+  'view work': { selector: '#btn-view-work', description: 'View our work button' },
   'book consultation': { selector: '#btn-cta-book', description: 'Book a consultation button' },
-  'start project': { selector: '#btn-portfolio-contact', description: 'Start a project button on portfolio page' },
+  'start project': { selector: '#btn-portfolio-contact', description: 'Start a project button' },
   'submit': { selector: '#btn-submit-form', description: 'Submit the contact form' },
-
-  // Form fields
-  'name field': { selector: '#contact-name', description: 'Name input field on the contact form' },
-  'email field': { selector: '#contact-email', description: 'Email input field on the contact form' },
-  'company field': { selector: '#contact-company', description: 'Company input field on the contact form' },
-  'project field': { selector: '#contact-project', description: 'Project details textarea on the contact form' },
-
-  // Sections
-  'services': { selector: '#section-services', description: 'Services section on the home page' },
-  'stats': { selector: '#section-stats', description: 'Statistics section on the home page' },
-  'testimonials': { selector: '#section-testimonials', description: 'Testimonials section on the home page' },
+  'name field': { selector: '#contact-name', description: 'Name input on contact form' },
+  'email field': { selector: '#contact-email', description: 'Email input on contact form' },
+  'company field': { selector: '#contact-company', description: 'Company input on contact form' },
+  'project field': { selector: '#contact-project', description: 'Project details textarea' },
+  'services': { selector: '#section-services', description: 'Services section' },
+  'stats': { selector: '#section-stats', description: 'Statistics section' },
+  'testimonials': { selector: '#section-testimonials', description: 'Testimonials section' },
 };
 
 // === Steve's System Prompt ===
-const SYSTEM_PROMPT = `You are Steve — Gitwix's AI concierge. You're a web dev from Manchester who's sharp, funny, and genuinely loves helping people. Think: your smartest mate who also happens to build brilliant websites.
+const SYSTEM_PROMPT = `You are Steve — Gitwix's AI sales concierge. You're a sharp, witty web developer from Manchester who's also an excellent salesman. Think: your smartest mate who happens to build brilliant websites and knows exactly how to close a deal — without being sleazy about it.
 
-VOICE RULES (CRITICAL):
-- MAX 2 sentences per reply. Be punchy. No waffling.
-- Sound like a real person talking, not a corporate chatbot.
-- British humour — dry, quick wit. Chuck in a dev joke if it fits naturally.
-- Use contractions ("we've", "that's", "I'll"). Never sound robotic.
-- End with energy — a question, a cheeky comment, or an action.
+VOICE RULES (CRITICAL — you are being spoken aloud via TTS):
+- MAX 2 sentences per reply. Punchy. Conversational. No waffling.
+- Sound like a real person talking — contractions, natural flow, energy.
+- British humour — dry, quick wit. Throw in a dev joke or cheeky comment when natural.
+- NEVER sound corporate or robotic. You're chatting, not presenting.
+- Always end with a question or a hook that keeps the conversation going.
 
-GITWIX FACTS (use naturally, don't list them):
-- Bespoke web dev agency, Manchester. 87+ projects, 35+ clients, 100 Lighthouse scores, 35% conversion lift.
+SALES APPROACH:
+- You're warm, curious, and genuinely interested in the visitor.
+- Ask smart discovery questions — what they need, what their business does, what their timeline is.
+- Listen for buying signals and gently guide toward booking a consultation or sharing their email.
+- Don't be pushy. Be helpful. The sale comes from trust.
+- If they seem interested, casually suggest connecting them with the team.
+- If there's a natural moment, offer to take their email so someone can follow up.
+
+CONVERSATION FLOW (follow this loosely, adapt to context):
+1. GREET — Warm, short intro. Ask what brings them here.
+2. DISCOVER — What kind of website/project? What does their business do?
+3. QUALIFY — Timeline? Budget range? Any specific tech needs?
+4. ENGAGE — Share relevant Gitwix facts/projects that match their needs.
+5. CLOSE — Suggest booking a consultation OR offer to take their email for follow-up.
+
+GITWIX FACTS (weave in naturally, never list):
+- Bespoke web dev agency, Manchester. 87+ projects, 35+ clients, 100 Lighthouse scores, 35% avg conversion lift.
 - Services: UI/UX, Web Dev, AI Integration, E-Commerce, SEO, Ongoing Support.
 - Stack: React, Next.js, TypeScript, Three.js, Tailwind, Python, FastAPI, OpenAI, LiveKit.
-- Clients: NovaTech, Ridgeline Ventures, Kōda Studio, Beacon Digital, Evergreen Health, Lyric Music.
+- Notable clients: NovaTech (SaaS), Ridgeline Ventures (investment portal), Kōda Studio (e-commerce), Beacon Digital (AI dashboard), Evergreen Health (healthcare PWA), Lyric Music (streaming platform).
 
-PAGES: Home (hero/services/stats/testimonials), About (story/values/tech), Portfolio (6 projects), Contact (booking form: name, email, company, project).
+EMAIL CAPTURE:
+When the user agrees to share their email, include this action:
+\`\`\`action
+{"type": "capture_email"}
+\`\`\`
+This shows an email input field. Don't ask them to type it in chat — the UI handles it.
 
-ACTIONS — When user asks to navigate/scroll/fill, include:
+PAGE ACTIONS — When user asks to navigate/scroll/see something:
 \`\`\`action
 {"type": "navigate", "target": "portfolio"}
 \`\`\`
-Types: navigate (home/about/portfolio/contact), scroll (target section), click (CSS selector), fill_form (fields object with contact-name/contact-email/contact-company/contact-project).
+Types: navigate (home/about/portfolio/contact), scroll (target section), click (CSS selector), fill_form (fields object).
+Only trigger actions when clearly asked. Narrate casually: "On it, pulling up the portfolio now..."
 
-Only trigger actions when explicitly asked. Narrate actions casually like "On it, pulling up the portfolio now..."
-If someone's interested, casually suggest booking a chat. Don't be pushy.`;
+PAGES: Home (hero/services/stats/testimonials), About (story/values/tech), Portfolio (6 projects), Contact (booking form).`;
+
+// === Pause Prompts (Steve asks these when user goes quiet) ===
+const PAUSE_PROMPTS = [
+  "So what kind of website are you looking for? Brochure site, web app, e-commerce — what's the vibe?",
+  "Got any questions about Gitwix or how we work? Happy to fill you in.",
+  "Would you like to speak with a member of the team? I can sort that out for you.",
+  "If you'd like, I can grab your email and have someone reach out — no pressure at all.",
+  "Want me to show you some of our recent projects? We've done some cracking work lately.",
+  "What does your business do, if you don't mind me asking? Helps me point you in the right direction.",
+];
 
 // === Audio Analysis for Orb ===
-function setupAudioAnalysis(audioElement) {
+let audioSourceNode = null;
+
+function setupOrbAudioAnalysis(audio) {
   if (!audioContext) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
@@ -90,9 +127,12 @@ function setupAudioAnalysis(audioElement) {
   analyser.fftSize = 64;
   analyser.smoothingTimeConstant = 0.8;
 
-  const source = audioContext.createMediaElementSource(audioElement);
-  source.connect(analyser);
-  analyser.connect(audioContext.destination);
+  if (!audio._sourceCreated) {
+    audioSourceNode = audioContext.createMediaElementSource(audio);
+    audioSourceNode.connect(analyser);
+    analyser.connect(audioContext.destination);
+    audio._sourceCreated = true;
+  }
 
   const dataArray = new Float32Array(analyser.frequencyBinCount);
 
@@ -101,22 +141,17 @@ function setupAudioAnalysis(audioElement) {
       window.orbVisualizer?.setActive(false);
       return;
     }
-
     analyser.getFloatFrequencyData(dataArray);
-
-    // Normalize frequency data to 0-1 range
     const normalized = new Float32Array(32);
     let rms = 0;
     for (let i = 0; i < Math.min(dataArray.length, 32); i++) {
-      const val = (dataArray[i] + 100) / 100; // Normalize from dB to 0-1
+      const val = (dataArray[i] + 100) / 100;
       normalized[i] = Math.max(0, Math.min(1, val));
       rms += normalized[i] * normalized[i];
     }
     rms = Math.sqrt(rms / 32);
-
     window.orbVisualizer?.setAudioLevel(rms);
     window.orbVisualizer?.setFrequencyData(normalized);
-
     requestAnimationFrame(updateOrb);
   }
 
@@ -128,14 +163,12 @@ function setupAudioAnalysis(audioElement) {
 async function moveCursorTo(targetSelector) {
   const target = document.querySelector(targetSelector);
   if (!target) return;
-
   cursor.classList.add('visible');
 
   const rect = target.getBoundingClientRect();
   const x = rect.left + rect.width / 2;
   const y = rect.top + rect.height / 2;
 
-  // Animate cursor to target
   return new Promise(resolve => {
     const startX = parseFloat(cursor.style.left) || window.innerWidth / 2;
     const startY = parseFloat(cursor.style.top) || window.innerHeight / 2;
@@ -145,30 +178,25 @@ async function moveCursorTo(targetSelector) {
     function animate(time) {
       const elapsed = time - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
       const ease = 1 - Math.pow(1 - progress, 3);
-
       cursor.style.left = (startX + (x - startX) * ease) + 'px';
       cursor.style.top = (startY + (y - startY) * ease) + 'px';
 
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        // Click ripple
         const ripple = document.createElement('div');
         ripple.className = 'steve-click-ripple';
         ripple.style.left = (x - 20) + 'px';
         ripple.style.top = (y - 20) + 'px';
         document.body.appendChild(ripple);
         setTimeout(() => ripple.remove(), 600);
-
         setTimeout(() => {
           cursor.classList.remove('visible');
           resolve();
         }, 300);
       }
     }
-
     requestAnimationFrame(animate);
   });
 }
@@ -189,9 +217,7 @@ async function executeAction(action) {
       const mapEntry = DOM_MAP[action.target];
       if (mapEntry) {
         const el = document.querySelector(mapEntry.selector);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } else if (action.direction === 'up') {
         window.scrollBy({ top: -400, behavior: 'smooth' });
       } else {
@@ -207,17 +233,14 @@ async function executeAction(action) {
     }
     case 'fill_form': {
       if (action.fields) {
-        // Navigate to contact page first
         const contactLink = document.querySelector('#nav-contact');
         if (contactLink) contactLink.click();
         await new Promise(r => setTimeout(r, 400));
-
         for (const [fieldId, value] of Object.entries(action.fields)) {
           const field = document.getElementById(fieldId);
           if (field) {
             await moveCursorTo('#' + fieldId);
             await new Promise(r => setTimeout(r, 200));
-            // Type effect
             field.focus();
             field.value = '';
             for (let i = 0; i < value.length; i++) {
@@ -230,10 +253,14 @@ async function executeAction(action) {
       }
       break;
     }
+    case 'capture_email': {
+      showEmailCapture();
+      break;
+    }
   }
 }
 
-// === Parse and Execute Actions from Response ===
+// === Parse Actions from Response ===
 function parseActions(text) {
   const actions = [];
   const regex = /```action\s*\n([\s\S]*?)\n```/g;
@@ -245,18 +272,66 @@ function parseActions(text) {
       console.warn('Failed to parse action:', match[1]);
     }
   }
-  // Strip action blocks from display text
   const cleanText = text.replace(/```action\s*\n[\s\S]*?\n```/g, '').trim();
   return { actions, cleanText };
 }
 
-// === TTS Playback ===
-let audioSourceNode = null;
+// === Email Capture UI ===
+function showEmailCapture() {
+  if (emailOverlay) {
+    emailOverlay.classList.add('visible');
+    emailInput.focus();
+  }
+}
 
+function hideEmailCapture() {
+  if (emailOverlay) {
+    emailOverlay.classList.remove('visible');
+  }
+}
+
+async function submitEmail() {
+  const email = emailInput.value.trim();
+  if (!email || !email.includes('@')) {
+    emailInput.classList.add('shake');
+    setTimeout(() => emailInput.classList.remove('shake'), 500);
+    return;
+  }
+
+  try {
+    await fetch(`${API}/api/lead`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, conversation: conversationHistory }),
+    });
+    emailCaptured = true;
+    hideEmailCapture();
+    // Steve confirms
+    const msg = "Brilliant, got that down. Someone from the team will be in touch — you're in good hands.";
+    conversationHistory.push({ role: 'assistant', content: msg });
+    await speakText(msg);
+    resetPauseTimer();
+  } catch (err) {
+    console.error('Email submit error:', err);
+  }
+}
+
+if (emailSubmitBtn) {
+  emailSubmitBtn.addEventListener('click', submitEmail);
+}
+if (emailInput) {
+  emailInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitEmail();
+  });
+}
+
+// === TTS Playback ===
 async function speakText(text) {
   if (!text) return;
   isSpeaking = true;
+  stopListening(); // Pause listening while Steve speaks
   updateStatus('Steve is speaking...');
+  clearPauseTimer();
 
   try {
     const res = await fetch(`${API}/api/tts`, {
@@ -265,59 +340,16 @@ async function speakText(text) {
       body: JSON.stringify({ text }),
     });
 
-    if (!res.ok) {
-      // Fallback to browser TTS
-      return fallbackSpeak(text);
-    }
+    if (!res.ok) return fallbackSpeak(text);
 
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
-
     currentAudio = audio;
 
-    // Set up audio analysis for orb
-    if (!audioContext) {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    // Can only create one MediaElementSource per element
-    if (!audio._sourceCreated) {
-      analyser = audioContext.createAnalyser();
-      analyser.fftSize = 64;
-      analyser.smoothingTimeConstant = 0.8;
-      audioSourceNode = audioContext.createMediaElementSource(audio);
-      audioSourceNode.connect(analyser);
-      analyser.connect(audioContext.destination);
-      audio._sourceCreated = true;
-    }
-
-    const dataArray = new Float32Array(analyser.frequencyBinCount);
-
-    function updateOrb() {
-      if (!isSpeaking) {
-        window.orbVisualizer?.setActive(false);
-        return;
-      }
-      analyser.getFloatFrequencyData(dataArray);
-      const normalized = new Float32Array(32);
-      let rms = 0;
-      for (let i = 0; i < Math.min(dataArray.length, 32); i++) {
-        const val = (dataArray[i] + 100) / 100;
-        normalized[i] = Math.max(0, Math.min(1, val));
-        rms += normalized[i] * normalized[i];
-      }
-      rms = Math.sqrt(rms / 32);
-      window.orbVisualizer?.setAudioLevel(rms);
-      window.orbVisualizer?.setFrequencyData(normalized);
-      requestAnimationFrame(updateOrb);
-    }
-
-    window.orbVisualizer?.setActive(true);
-    updateOrb();
+    setupOrbAudioAnalysis(audio);
 
     await audio.play();
-
     await new Promise(resolve => {
       audio.onended = () => {
         isSpeaking = false;
@@ -331,6 +363,12 @@ async function speakText(text) {
     console.warn('TTS API failed, using browser fallback:', err);
     return fallbackSpeak(text);
   }
+
+  updateStatus('');
+  // Resume listening after Steve finishes speaking
+  if (conversationActive) {
+    startContinuousListening();
+  }
 }
 
 function fallbackSpeak(text) {
@@ -340,7 +378,6 @@ function fallbackSpeak(text) {
     utter.pitch = 0.95;
     utter.lang = 'en-GB';
 
-    // Try to pick a UK male voice
     const voices = speechSynthesis.getVoices();
     const ukMale = voices.find(v => v.lang.startsWith('en-GB') && v.name.toLowerCase().includes('male'));
     const uk = voices.find(v => v.lang.startsWith('en-GB'));
@@ -350,7 +387,6 @@ function fallbackSpeak(text) {
     utter.onstart = () => {
       isSpeaking = true;
       window.orbVisualizer?.setActive(true);
-      // Simple pulse for browser TTS (no frequency data)
       function pulse() {
         if (!isSpeaking) { window.orbVisualizer?.setActive(false); return; }
         const level = 0.3 + Math.sin(performance.now() * 0.005) * 0.2;
@@ -363,6 +399,8 @@ function fallbackSpeak(text) {
     utter.onend = () => {
       isSpeaking = false;
       window.orbVisualizer?.setActive(false);
+      updateStatus('');
+      if (conversationActive) startContinuousListening();
       resolve();
     };
 
@@ -372,10 +410,11 @@ function fallbackSpeak(text) {
 
 // === LLM Chat ===
 async function chatWithSteve(userMessage) {
-  conversationHistory.push({ role: 'user', content: userMessage });
+  if (isProcessing) return;
+  isProcessing = true;
+  clearPauseTimer();
 
-  // Show thinking state
-  showBubble('Hmm, let me think...');
+  conversationHistory.push({ role: 'user', content: userMessage });
   updateStatus('Steve is thinking...');
 
   try {
@@ -385,41 +424,82 @@ async function chatWithSteve(userMessage) {
       body: JSON.stringify({
         messages: conversationHistory,
         system: SYSTEM_PROMPT,
+        context: {
+          emailCaptured,
+          currentPage: document.querySelector('.page--active')?.id || 'page-home',
+          pauseCount,
+        },
       }),
     });
 
     if (!res.ok) throw new Error('Chat API failed');
 
     const data = await res.json();
-    const fullResponse = data.response || "Sorry, I'm having a bit of a moment. Try again?";
-
-    // Parse actions
+    const fullResponse = data.response || "Sorry, I'm having a moment. Try again?";
     const { actions, cleanText } = parseActions(fullResponse);
 
     conversationHistory.push({ role: 'assistant', content: cleanText });
-
-    // Show the text
-    showBubble(cleanText);
 
     // Execute actions
     for (const action of actions) {
       await executeAction(action);
     }
 
-    // Speak the clean text
+    // Speak the response
     await speakText(cleanText);
 
-    updateStatus('');
+    // Start pause timer after Steve speaks
+    resetPauseTimer();
+
   } catch (err) {
     console.error('Chat error:', err);
     const fallbackMsg = "Whoops, brain fart. Give that another go for me?";
-    showBubble(fallbackMsg);
     await speakText(fallbackMsg);
-    updateStatus('');
+  }
+
+  isProcessing = false;
+}
+
+// === Pause Detection — Steve asks questions when user goes quiet ===
+function resetPauseTimer() {
+  clearPauseTimer();
+  if (!conversationActive || pauseCount >= MAX_PAUSE_PROMPTS || emailCaptured) return;
+
+  pauseTimer = setTimeout(() => {
+    if (!isSpeaking && !isProcessing && conversationActive) {
+      pauseCount++;
+      // Pick a contextual pause prompt
+      const prompt = getNextPausePrompt();
+      conversationHistory.push({ role: 'assistant', content: prompt });
+      speakText(prompt);
+    }
+  }, PAUSE_TIMEOUT);
+}
+
+function clearPauseTimer() {
+  if (pauseTimer) {
+    clearTimeout(pauseTimer);
+    pauseTimer = null;
   }
 }
 
-// === Speech Recognition ===
+function getNextPausePrompt() {
+  // Smart prompt selection based on conversation state
+  const msgCount = conversationHistory.filter(m => m.role === 'user').length;
+
+  if (msgCount === 0) {
+    return PAUSE_PROMPTS[0]; // Ask what they're looking for
+  } else if (msgCount <= 2 && !emailCaptured) {
+    // Still early — discovery questions
+    return PAUSE_PROMPTS[Math.min(pauseCount, 1)];
+  } else if (!emailCaptured) {
+    // Later in convo — try to capture email or offer team connect
+    return pauseCount % 2 === 0 ? PAUSE_PROMPTS[3] : PAUSE_PROMPTS[2];
+  }
+  return PAUSE_PROMPTS[4]; // Fallback: show portfolio
+}
+
+// === Speech Recognition — Continuous Mode ===
 function initRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
@@ -428,71 +508,91 @@ function initRecognition() {
   }
 
   const rec = new SpeechRecognition();
-  rec.continuous = false;
+  rec.continuous = true;
   rec.interimResults = true;
   rec.lang = 'en-GB';
+
+  let finalTranscript = '';
+  let silenceTimer = null;
 
   rec.onstart = () => {
     isListening = true;
     micBtn.classList.add('steve-mic-btn--listening');
     updateStatus('Listening...');
-    showBubble('I\'m all ears...');
   };
 
   rec.onresult = (event) => {
-    let transcript = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      transcript += event.results[i][0].transcript;
+    finalTranscript = '';
+    let interimTranscript = '';
+
+    for (let i = 0; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript;
+      } else {
+        interimTranscript += event.results[i][0].transcript;
+      }
     }
 
-    if (event.results[event.results.length - 1].isFinal) {
-      stopListening();
-      if (transcript.trim()) {
-        chatWithSteve(transcript.trim());
-      }
-    } else {
-      // Show interim results
-      showBubble(`"${transcript}"`);
+    // User is actively speaking — clear any silence/pause timers
+    clearPauseTimer();
+    if (silenceTimer) clearTimeout(silenceTimer);
+
+    if (finalTranscript.trim()) {
+      userHasSpoken = true;
+      // Wait a moment for the user to finish their thought (multi-sentence)
+      silenceTimer = setTimeout(() => {
+        if (finalTranscript.trim()) {
+          const msg = finalTranscript.trim();
+          finalTranscript = '';
+          stopListening();
+          chatWithSteve(msg);
+        }
+      }, 1500); // 1.5s after last final result = user is done talking
     }
   };
 
   rec.onerror = (event) => {
     console.warn('Recognition error:', event.error);
-    stopListening();
-    if (event.error === 'no-speech') {
-      showBubble("I didn't catch that. Give the mic another tap when you're ready.");
+    if (event.error === 'not-allowed') {
+      updateStatus('Mic access denied — click the mic to allow');
+      conversationActive = false;
+      return;
+    }
+    if (event.error === 'aborted') return; // Intentional stop
+    // Auto-restart on transient errors
+    if (conversationActive && !isSpeaking && !isProcessing) {
+      setTimeout(() => startContinuousListening(), 500);
     }
   };
 
   rec.onend = () => {
-    stopListening();
+    isListening = false;
+    micBtn.classList.remove('steve-mic-btn--listening');
+    // Auto-restart if conversation is active and Steve isn't speaking
+    if (conversationActive && !isSpeaking && !isProcessing) {
+      setTimeout(() => startContinuousListening(), 300);
+    }
   };
 
   return rec;
 }
 
-function startListening() {
-  if (isSpeaking) {
-    // Stop Steve from speaking
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio = null;
-    }
-    speechSynthesis.cancel();
-    isSpeaking = false;
-    window.orbVisualizer?.setActive(false);
-  }
+function startContinuousListening() {
+  if (isSpeaking || isProcessing) return;
 
   if (!recognition) {
     recognition = initRecognition();
   }
 
   if (recognition && !isListening) {
-    // Resume audio context if suspended
     if (audioContext && audioContext.state === 'suspended') {
       audioContext.resume();
     }
-    recognition.start();
+    try {
+      recognition.start();
+    } catch (e) {
+      // Already started — ignore
+    }
   }
 }
 
@@ -504,37 +604,84 @@ function stopListening() {
   }
 }
 
+// === Activate Steve — Start the Conversation ===
+async function activateSteve() {
+  if (conversationActive) return;
+  conversationActive = true;
+
+  // Resume audio context (required for autoplay policy)
+  if (audioContext && audioContext.state === 'suspended') {
+    await audioContext.resume();
+  }
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  // Steve greets
+  if (!hasGreeted) {
+    hasGreeted = true;
+    const greeting = "Hey there! I'm Steve from Gitwix. What brings you to our corner of the internet today?";
+    conversationHistory.push({ role: 'assistant', content: greeting });
+    await speakText(greeting);
+    // Listening auto-starts after speakText finishes
+  } else {
+    startContinuousListening();
+  }
+
+  // Update mic button to show active state
+  micBtn.classList.add('steve-mic-btn--active');
+  resetPauseTimer();
+}
+
+function deactivateSteve() {
+  conversationActive = false;
+  clearPauseTimer();
+  stopListening();
+  micBtn.classList.remove('steve-mic-btn--active');
+  micBtn.classList.remove('steve-mic-btn--listening');
+  updateStatus('');
+
+  if (isSpeaking) {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio = null;
+    }
+    speechSynthesis.cancel();
+    isSpeaking = false;
+    window.orbVisualizer?.setActive(false);
+  }
+}
+
 // === UI Helpers ===
-function showBubble(text) {
-  // No-op: text bubble removed, voice only
-  if (bubbleText) bubbleText.textContent = text;
-}
-
-function hideBubble() {
-  // No-op
-}
-
 function updateStatus(text) {
-  statusEl.textContent = text;
+  if (statusEl) statusEl.textContent = text;
 }
 
 // === Event Listeners ===
+
+// Mic button: toggle conversation on/off
 micBtn.addEventListener('click', () => {
-  if (isListening) {
-    stopListening();
+  if (conversationActive) {
+    deactivateSteve();
   } else {
-    startListening();
+    activateSteve();
   }
 });
 
-// Activate Steve from nav buttons
+// "Talk to Steve" buttons throughout the site
 document.querySelectorAll('[data-action="activate-steve"]').forEach(el => {
   el.addEventListener('click', (e) => {
     e.preventDefault();
-    showBubble("Alright! I'm Steve, your man at Gitwix. Hit the mic and tell me what you need — I'll sort you out.");
-    speakText("Alright! I'm Steve, your man at Gitwix. Hit the mic and tell me what you need, I'll sort you out.");
+    activateSteve();
   });
 });
+
+// Close email overlay on outside click
+if (emailOverlay) {
+  emailOverlay.addEventListener('click', (e) => {
+    if (e.target === emailOverlay) hideEmailCapture();
+  });
+}
 
 // Load voices for browser TTS fallback
 if ('speechSynthesis' in window) {
@@ -542,14 +689,5 @@ if ('speechSynthesis' in window) {
   speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
 }
 
-// Initial greeting bubble (delayed)
-setTimeout(() => {
-  showBubble("I'm Steve — click the mic and let's chat.");
-}, 2000);
-
-// Hide bubble after 8 seconds if no interaction
-setTimeout(() => {
-  if (!isListening && !isSpeaking) {
-    hideBubble();
-  }
-}, 10000);
+// === Export for orb.js ===
+export { };

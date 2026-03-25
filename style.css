@@ -630,15 +630,7 @@ main {
   margin-bottom: var(--space-6);
 }
 
-.testimonial__quote::before {
-  content: '\201C';
-  font-size: var(--text-2xl);
-  color: var(--color-primary-light);
-  position: absolute;
-  top: var(--space-4);
-  left: var(--space-6);
-  line-height: 1;
-}
+/* Quote mark now handled by .testimonial__quote-mark div */
 
 .testimonial__author {
   font-size: var(--text-sm);
@@ -882,50 +874,222 @@ main {
 }
 
 /* ========================================================
-   PAGE TRANSITIONS (scroll reveals)
+   SERVICES — Horizontal Scroll
    ======================================================== */
 
-@supports (animation-timeline: scroll()) {
-  .fade-in {
-    opacity: 0;
-    animation: reveal-fade linear both;
-    animation-timeline: view();
-    animation-range: entry 0% entry 100%;
+.section--services-hscroll {
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+.services-header {
+  margin-bottom: var(--space-10);
+}
+
+.services-track {
+  display: flex;
+  gap: var(--space-6);
+  padding: var(--space-4) var(--space-6) var(--space-16);
+  will-change: transform;
+}
+
+.service-card {
+  flex-shrink: 0;
+  width: 380px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-xl);
+  padding: var(--space-10) var(--space-8);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s var(--ease-out),
+              box-shadow 0.3s var(--ease-out);
+}
+
+.service-card:hover {
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-lg);
+}
+
+.service-card__number {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 300;
+  color: var(--color-primary);
+  opacity: 0.15;
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-6);
+  line-height: 1;
+}
+
+.service-card__icon {
+  color: var(--color-primary);
+  margin-bottom: var(--space-6);
+}
+
+.service-card__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  margin-bottom: var(--space-3);
+}
+
+.service-card__text {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+.service-card__line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--ease-out);
+}
+
+.service-card:hover .service-card__line {
+  transform: scaleX(1);
+}
+
+@media (max-width: 768px) {
+  .section--services-hscroll {
+    padding-bottom: var(--space-8);
+  }
+  .services-track {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+  }
+  .service-card {
+    width: 280px;
+    padding: var(--space-8) var(--space-6);
+    scroll-snap-align: start;
   }
 }
 
-@keyframes reveal-fade {
-  to { opacity: 1; }
+/* ========================================================
+   STATS — Enhanced
+   ======================================================== */
+
+.section--stats {
+  position: relative;
+  overflow: hidden;
 }
 
-.fade-in {
-  opacity: 1; /* fallback: visible */
+/* Decorative floating elements */
+.deco-float {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.deco-float--1 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(184,148,63,0.06) 0%, transparent 70%);
+  top: -60px;
+  right: -40px;
+}
+
+.deco-float--2 {
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(184,148,63,0.04) 0%, transparent 70%);
+  bottom: -40px;
+  left: 10%;
 }
 
 /* ========================================================
-   PAGE-SPECIFIC
+   TESTIMONIALS — Parallax Grid
    ======================================================== */
 
-/* About page */
-.about-split {
+.section--testimonials {
+  overflow: hidden;
+}
+
+.testimonials-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-12);
-  align-items: center;
+  gap: var(--space-8);
 }
 
 @media (min-width: 768px) {
-  .about-split { grid-template-columns: 1fr 1fr; }
+  .testimonials-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-8);
+  }
+  /* Offset second column for staggered look */
+  .testimonials-grid .testimonial:nth-child(2) { margin-top: var(--space-16); }
+  .testimonials-grid .testimonial:nth-child(4) { margin-top: var(--space-16); }
 }
 
-.about-values {
+.testimonial__quote-mark {
+  font-family: var(--font-display);
+  font-size: 5rem;
+  line-height: 0.8;
+  color: var(--color-primary);
+  opacity: 0.15;
+  margin-bottom: var(--space-2);
+}
+
+.testimonial__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* ========================================================
+   CTA — Enhanced
+   ======================================================== */
+
+.section--cta {
+  background: var(--color-surface);
+  position: relative;
+  overflow: hidden;
+}
+
+.section--cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(184,148,63,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ========================================================
+   ABOUT — Pinned Left / Scrolling Right
+   ======================================================== */
+
+.about-pinned {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-4);
+  gap: var(--space-12);
 }
 
-@media (min-width: 640px) {
-  .about-values { grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 768px) {
+  .about-pinned {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+    align-items: start;
+  }
+}
+
+.about-pinned__left {
+  position: relative;
+}
+
+.about-pinned__right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
 }
 
 .value-item {
@@ -971,3 +1135,129 @@ main {
 /* Hide page content when not active (SPA) */
 .page { display: none; }
 .page--active { display: block; }
+
+/* ========================================================
+   STEVE EMAIL CAPTURE OVERLAY
+   ======================================================== */
+
+.steve-email-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(42, 37, 32, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s var(--ease-out);
+}
+
+.steve-email-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.steve-email-card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-xl);
+  padding: var(--space-10);
+  max-width: 440px;
+  width: 90%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.4s var(--ease-out);
+}
+
+.steve-email-overlay.visible .steve-email-card {
+  transform: translateY(0) scale(1);
+}
+
+.steve-email-card__icon {
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
+}
+
+.steve-email-card__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  margin-bottom: var(--space-2);
+}
+
+.steve-email-card__text {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-6);
+}
+
+.steve-email-card__input-row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.steve-email-card__input-row .form__input {
+  flex: 1;
+}
+
+/* Shake animation for invalid email */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-4px); }
+}
+
+.shake {
+  animation: shake 0.4s ease;
+}
+
+/* ========================================================
+   SCROLL ANIMATION HELPERS
+   ======================================================== */
+
+/* Word reveal spans */
+.word-reveal {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+/* Portfolio card image overflow for parallax */
+.portfolio-card {
+  overflow: hidden;
+}
+
+.portfolio-card__img {
+  will-change: transform;
+}
+
+/* Active mic button state */
+.steve-mic-btn--active {
+  background: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(184, 148, 63, 0.2), var(--shadow-lg);
+}
+
+/* Lenis smooth scroll body */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Ensure pinned sections work with SPA page transitions */
+.page--active .pin-spacer {
+  display: block !important;
+}

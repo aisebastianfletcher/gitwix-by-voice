@@ -32,6 +32,11 @@
 <!-- Icons -->
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
+<!-- GSAP + ScrollTrigger + Lenis -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lenis@1/dist/lenis.min.js"></script>
+
 <!-- Styles -->
 <link rel="stylesheet" href="./base.css">
 <link rel="stylesheet" href="./style.css">
@@ -104,68 +109,80 @@
         </div>
       </section>
 
-      <!-- Services -->
-      <section class="section" id="section-services">
-        <div class="container">
-          <div class="text-center mb-8">
+      <!-- Services — Horizontal Scroll -->
+      <section class="section section--services-hscroll" id="section-services-hscroll">
+        <div class="services-header">
+          <div class="container">
             <span class="section__label" id="services-label">What we do</span>
             <h2 class="section__title" id="services-title">Crafted with precision,<br>delivered with care.</h2>
-            <p class="section__subtitle mx-auto" id="services-subtitle">
-              From concept to deployment, we handle every pixel and every line of code.
-            </p>
           </div>
-          <div class="grid-3" id="services-grid">
-            <div class="card card--interactive fade-in" id="service-design">
-              <div class="card__icon"><i data-lucide="palette" style="width:24px;height:24px"></i></div>
-              <h3 class="card__title">UI/UX Design</h3>
-              <p class="card__text">Intuitive interfaces that feel effortless. We obsess over every interaction so your users don't have to think twice.</p>
-            </div>
-            <div class="card card--interactive fade-in" id="service-development">
-              <div class="card__icon"><i data-lucide="code-2" style="width:24px;height:24px"></i></div>
-              <h3 class="card__title">Web Development</h3>
-              <p class="card__text">Clean, performant code that scales. React, Next.js, TypeScript — whatever your stack needs, we build it right.</p>
-            </div>
-            <div class="card card--interactive fade-in" id="service-ai">
-              <div class="card__icon"><i data-lucide="brain-circuit" style="width:24px;height:24px"></i></div>
-              <h3 class="card__title">AI Integration</h3>
-              <p class="card__text">Intelligent features that set you apart. Voice agents, chatbots, automation — we make AI feel natural.</p>
-            </div>
-            <div class="card card--interactive fade-in" id="service-ecommerce">
-              <div class="card__icon"><i data-lucide="shopping-bag" style="width:24px;height:24px"></i></div>
-              <h3 class="card__title">E-Commerce</h3>
-              <p class="card__text">Storefronts that sell. Stripe-integrated, conversion-optimised, and built to handle your growth.</p>
-            </div>
-            <div class="card card--interactive fade-in" id="service-seo">
-              <div class="card__icon"><i data-lucide="search" style="width:24px;height:24px"></i></div>
-              <h3 class="card__title">SEO &amp; Performance</h3>
-              <p class="card__text">100/100 Lighthouse scores aren't a goal — they're our baseline. Every site ships fast, accessible, and discoverable.</p>
-            </div>
-            <div class="card card--interactive fade-in" id="service-maintenance">
-              <div class="card__icon"><i data-lucide="shield-check" style="width:24px;height:24px"></i></div>
-              <h3 class="card__title">Ongoing Support</h3>
-              <p class="card__text">We don't disappear after launch. Monthly retainers keep your site secure, updated, and performing at its peak.</p>
-            </div>
+        </div>
+        <div class="services-track">
+          <div class="service-card">
+            <div class="service-card__number">01</div>
+            <div class="service-card__icon"><i data-lucide="palette" style="width:32px;height:32px"></i></div>
+            <h3 class="service-card__title">UI/UX Design</h3>
+            <p class="service-card__text">Intuitive interfaces that feel effortless. We obsess over every interaction so your users don't have to think twice.</p>
+            <div class="service-card__line"></div>
+          </div>
+          <div class="service-card">
+            <div class="service-card__number">02</div>
+            <div class="service-card__icon"><i data-lucide="code-2" style="width:32px;height:32px"></i></div>
+            <h3 class="service-card__title">Web Development</h3>
+            <p class="service-card__text">Clean, performant code that scales. React, Next.js, TypeScript — whatever your stack needs, we build it right.</p>
+            <div class="service-card__line"></div>
+          </div>
+          <div class="service-card">
+            <div class="service-card__number">03</div>
+            <div class="service-card__icon"><i data-lucide="brain-circuit" style="width:32px;height:32px"></i></div>
+            <h3 class="service-card__title">AI Integration</h3>
+            <p class="service-card__text">Intelligent features that set you apart. Voice agents, chatbots, automation — we make AI feel natural.</p>
+            <div class="service-card__line"></div>
+          </div>
+          <div class="service-card">
+            <div class="service-card__number">04</div>
+            <div class="service-card__icon"><i data-lucide="shopping-bag" style="width:32px;height:32px"></i></div>
+            <h3 class="service-card__title">E-Commerce</h3>
+            <p class="service-card__text">Storefronts that sell. Stripe-integrated, conversion-optimised, and built to handle your growth.</p>
+            <div class="service-card__line"></div>
+          </div>
+          <div class="service-card">
+            <div class="service-card__number">05</div>
+            <div class="service-card__icon"><i data-lucide="search" style="width:32px;height:32px"></i></div>
+            <h3 class="service-card__title">SEO &amp; Performance</h3>
+            <p class="service-card__text">100/100 Lighthouse scores aren't a goal — they're our baseline. Every site ships fast, accessible, and discoverable.</p>
+            <div class="service-card__line"></div>
+          </div>
+          <div class="service-card">
+            <div class="service-card__number">06</div>
+            <div class="service-card__icon"><i data-lucide="shield-check" style="width:32px;height:32px"></i></div>
+            <h3 class="service-card__title">Ongoing Support</h3>
+            <p class="service-card__text">We don't disappear after launch. Monthly retainers keep your site secure, updated, and performing at its peak.</p>
+            <div class="service-card__line"></div>
           </div>
         </div>
       </section>
 
       <!-- Stats -->
-      <section class="section" id="section-stats">
+      <section class="section section--stats" id="section-stats">
         <div class="container">
+          <!-- Decorative parallax elements -->
+          <div class="deco-float deco-float--1" data-parallax="0.3"></div>
+          <div class="deco-float deco-float--2" data-parallax="-0.2"></div>
           <div class="stats" id="stats-grid">
-            <div class="stat fade-in" id="stat-projects">
-              <div class="stat__number" data-count="87">87+</div>
+            <div class="stat" id="stat-projects">
+              <div class="stat__number" data-count="87">0+</div>
               <div class="stat__label">Projects Delivered</div>
             </div>
-            <div class="stat fade-in" id="stat-clients">
-              <div class="stat__number" data-count="35">35+</div>
+            <div class="stat" id="stat-clients">
+              <div class="stat__number" data-count="35">0+</div>
               <div class="stat__label">Happy Clients</div>
             </div>
-            <div class="stat fade-in" id="stat-score">
-              <div class="stat__number">100</div>
+            <div class="stat" id="stat-score">
+              <div class="stat__number" data-count="100">0</div>
               <div class="stat__label">Lighthouse Score</div>
             </div>
-            <div class="stat fade-in" id="stat-conversion">
+            <div class="stat" id="stat-conversion">
               <div class="stat__number">35%</div>
               <div class="stat__label">Avg. Conversion Lift</div>
             </div>
@@ -173,40 +190,60 @@
         </div>
       </section>
 
-      <!-- Testimonials -->
-      <section class="section" id="section-testimonials">
+      <!-- Testimonials — Parallax Stacked -->
+      <section class="section section--testimonials" id="section-testimonials">
         <div class="container">
           <div class="text-center mb-8">
             <span class="section__label" id="testimonials-label">Client Stories</span>
             <h2 class="section__title" id="testimonials-title">Trusted by founders &amp; teams.</h2>
           </div>
-          <div class="grid-2" id="testimonials-grid">
-            <div class="testimonial fade-in" id="testimonial-1">
+          <div class="testimonials-grid" id="testimonials-grid">
+            <div class="testimonial" id="testimonial-1">
+              <div class="testimonial__quote-mark">&ldquo;</div>
               <p class="testimonial__quote">Gitwix didn't just build our website — they understood our vision and translated it into something our customers love. The AI features blew our minds.</p>
-              <div class="testimonial__author">Sarah Chen</div>
-              <div class="testimonial__role">CEO, NovaTech Solutions</div>
+              <div class="testimonial__footer">
+                <div>
+                  <div class="testimonial__author">Sarah Chen</div>
+                  <div class="testimonial__role">CEO, NovaTech Solutions</div>
+                </div>
+              </div>
             </div>
-            <div class="testimonial fade-in" id="testimonial-2">
+            <div class="testimonial" id="testimonial-2">
+              <div class="testimonial__quote-mark">&ldquo;</div>
               <p class="testimonial__quote">Working with the Gitwix team was like having a senior engineering department on speed dial. Fast, precise, and they actually listen.</p>
-              <div class="testimonial__author">Marcus Webb</div>
-              <div class="testimonial__role">Founder, Ridgeline Ventures</div>
+              <div class="testimonial__footer">
+                <div>
+                  <div class="testimonial__author">Marcus Webb</div>
+                  <div class="testimonial__role">Founder, Ridgeline Ventures</div>
+                </div>
+              </div>
             </div>
-            <div class="testimonial fade-in" id="testimonial-3">
+            <div class="testimonial" id="testimonial-3">
+              <div class="testimonial__quote-mark">&ldquo;</div>
               <p class="testimonial__quote">Our conversion rate jumped 42% within a month of launching the new site. The ROI speaks for itself.</p>
-              <div class="testimonial__author">Priya Patel</div>
-              <div class="testimonial__role">Marketing Director, Kōda Studio</div>
+              <div class="testimonial__footer">
+                <div>
+                  <div class="testimonial__author">Priya Patel</div>
+                  <div class="testimonial__role">Marketing Director, Kōda Studio</div>
+                </div>
+              </div>
             </div>
-            <div class="testimonial fade-in" id="testimonial-4">
+            <div class="testimonial" id="testimonial-4">
+              <div class="testimonial__quote-mark">&ldquo;</div>
               <p class="testimonial__quote">Steve, the AI concierge, is genuinely impressive. Our visitors spend 3x longer on the site because they love interacting with him.</p>
-              <div class="testimonial__author">James O'Sullivan</div>
-              <div class="testimonial__role">CTO, Beacon Digital</div>
+              <div class="testimonial__footer">
+                <div>
+                  <div class="testimonial__author">James O'Sullivan</div>
+                  <div class="testimonial__role">CTO, Beacon Digital</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <!-- CTA -->
-      <section class="section" id="section-cta" style="background: var(--color-surface);">
+      <section class="section section--cta" id="section-cta">
         <div class="container text-center">
           <h2 class="section__title" id="cta-title">Ready to build something<br><em style="font-style:italic;color:var(--color-primary)">extraordinary</em>?</h2>
           <p class="section__subtitle mx-auto" id="cta-subtitle">Book a free consultation. Or better yet, just ask Steve.</p>
@@ -234,46 +271,44 @@
         </div>
       </section>
 
-      <section class="section" id="section-about-story">
+      <!-- Pinned left / scrolling right -->
+      <section class="section section--about-pinned" id="section-about-story">
         <div class="container">
-          <div class="about-split">
-            <div>
+          <div class="about-pinned">
+            <div class="about-pinned__left">
               <span class="section__label">Our Story</span>
               <h2 class="section__title" id="about-story-title">Born from frustration,<br>built on standards.</h2>
               <p class="section__subtitle" id="about-story-text">
-                We started Gitwix because we were tired of seeing businesses get shortchanged by cookie-cutter websites. Every project we take on gets the same treatment: bespoke design, clean code, obsessive attention to detail, and an AI-first approach that puts us years ahead of the competition.
-              </p>
-              <p class="section__subtitle" id="about-story-text-2" style="margin-top: var(--space-4);">
-                We're not a factory. We're craftspeople. And Steve — our AI concierge — is proof that we practice what we preach.
+                We started Gitwix because we were tired of seeing businesses get shortchanged by cookie-cutter websites. Every project we take on gets the same treatment: bespoke design, clean code, obsessive attention to detail, and an AI-first approach.
               </p>
             </div>
-            <div class="about-values" id="about-values-grid">
-              <div class="value-item fade-in" id="value-craft">
-                <div class="value-item__icon"><i data-lucide="gem" style="width:24px;height:24px"></i></div>
+            <div class="about-pinned__right">
+              <div class="value-item" id="value-craft">
+                <div class="value-item__icon"><i data-lucide="gem" style="width:28px;height:28px"></i></div>
                 <div>
                   <div class="value-item__title">Craftsmanship</div>
-                  <div class="value-item__text">Every pixel is intentional. We don't cut corners.</div>
+                  <div class="value-item__text">Every pixel is intentional. We don't cut corners — we refine until it's right.</div>
                 </div>
               </div>
-              <div class="value-item fade-in" id="value-performance">
-                <div class="value-item__icon"><i data-lucide="zap" style="width:24px;height:24px"></i></div>
+              <div class="value-item" id="value-performance">
+                <div class="value-item__icon"><i data-lucide="zap" style="width:28px;height:28px"></i></div>
                 <div>
                   <div class="value-item__title">Performance</div>
-                  <div class="value-item__text">Speed isn't a feature — it's the foundation.</div>
+                  <div class="value-item__text">Speed isn't a feature — it's the foundation. Every millisecond matters to your users and your revenue.</div>
                 </div>
               </div>
-              <div class="value-item fade-in" id="value-innovation">
-                <div class="value-item__icon"><i data-lucide="lightbulb" style="width:24px;height:24px"></i></div>
+              <div class="value-item" id="value-innovation">
+                <div class="value-item__icon"><i data-lucide="lightbulb" style="width:28px;height:28px"></i></div>
                 <div>
                   <div class="value-item__title">Innovation</div>
-                  <div class="value-item__text">AI-first thinking in everything we build.</div>
+                  <div class="value-item__text">AI-first thinking in everything we build. We're not following trends — we're setting them.</div>
                 </div>
               </div>
-              <div class="value-item fade-in" id="value-honesty">
-                <div class="value-item__icon"><i data-lucide="heart-handshake" style="width:24px;height:24px"></i></div>
+              <div class="value-item" id="value-honesty">
+                <div class="value-item__icon"><i data-lucide="heart-handshake" style="width:28px;height:28px"></i></div>
                 <div>
                   <div class="value-item__title">Honesty</div>
-                  <div class="value-item__text">We tell you what you need, not what you want to hear.</div>
+                  <div class="value-item__text">We tell you what you need, not what you want to hear. That's how trust is built.</div>
                 </div>
               </div>
             </div>
@@ -287,15 +322,15 @@
           <h2 class="section__title" id="about-tech-title">Built with the best tools.</h2>
           <p class="section__subtitle mx-auto" id="about-tech-subtitle">We pick the right tool for the job — not the trendy one.</p>
           <div class="grid-3 mt-8" id="tech-grid">
-            <div class="card fade-in" id="tech-frontend">
+            <div class="card" id="tech-frontend">
               <h3 class="card__title">Front-End</h3>
               <p class="card__text">React, Next.js, TypeScript, Three.js, Tailwind, GSAP — pixel-perfect UIs that perform.</p>
             </div>
-            <div class="card fade-in" id="tech-backend">
+            <div class="card" id="tech-backend">
               <h3 class="card__title">Back-End</h3>
               <p class="card__text">Node.js, Python, FastAPI, PostgreSQL, Redis — scalable, secure, and reliable.</p>
             </div>
-            <div class="card fade-in" id="tech-ai">
+            <div class="card" id="tech-ai">
               <h3 class="card__title">AI &amp; Automation</h3>
               <p class="card__text">OpenAI, LiveKit, LangChain, custom voice agents — intelligence baked into every layer.</p>
             </div>
@@ -317,8 +352,8 @@
       <section class="section" id="section-portfolio-grid" style="padding-top: 0;">
         <div class="container">
           <div class="portfolio-grid" id="portfolio-cards">
-            <div class="portfolio-card fade-in" id="project-1">
-              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #2a2520 0%, #5a534c 100%); display:flex; align-items:center; justify-content:center;">
+            <div class="portfolio-card" id="project-1">
+              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #2a2520 0%, #5a534c 100%); display:flex; align-items:center; justify-content:center; height: 120%;">
                 <span style="font-family:var(--font-display); font-size:var(--text-xl); color:var(--color-primary-light); opacity:0.6;">NovaTech</span>
               </div>
               <div class="portfolio-card__overlay">
@@ -326,8 +361,8 @@
                 <div class="portfolio-card__tag">SaaS Platform &bull; Full Redesign</div>
               </div>
             </div>
-            <div class="portfolio-card fade-in" id="project-2">
-              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #3B3530 0%, #B8943F 100%); display:flex; align-items:center; justify-content:center;">
+            <div class="portfolio-card" id="project-2">
+              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #3B3530 0%, #B8943F 100%); display:flex; align-items:center; justify-content:center; height: 120%;">
                 <span style="font-family:var(--font-display); font-size:var(--text-xl); color:#FAF8F4; opacity:0.6;">Ridgeline</span>
               </div>
               <div class="portfolio-card__overlay">
@@ -335,8 +370,8 @@
                 <div class="portfolio-card__tag">Investment Portal &bull; Web App</div>
               </div>
             </div>
-            <div class="portfolio-card fade-in" id="project-3">
-              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #F5F2EC 0%, #DDD8CE 100%); display:flex; align-items:center; justify-content:center;">
+            <div class="portfolio-card" id="project-3">
+              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #F5F2EC 0%, #DDD8CE 100%); display:flex; align-items:center; justify-content:center; height: 120%;">
                 <span style="font-family:var(--font-display); font-size:var(--text-xl); color:var(--color-ink); opacity:0.5;">Kōda</span>
               </div>
               <div class="portfolio-card__overlay">
@@ -344,8 +379,8 @@
                 <div class="portfolio-card__tag">E-Commerce &bull; Shopify Custom</div>
               </div>
             </div>
-            <div class="portfolio-card fade-in" id="project-4">
-              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display:flex; align-items:center; justify-content:center;">
+            <div class="portfolio-card" id="project-4">
+              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display:flex; align-items:center; justify-content:center; height: 120%;">
                 <span style="font-family:var(--font-display); font-size:var(--text-xl); color:#4a9fd5; opacity:0.6;">Beacon</span>
               </div>
               <div class="portfolio-card__overlay">
@@ -353,8 +388,8 @@
                 <div class="portfolio-card__tag">AI Dashboard &bull; React + Python</div>
               </div>
             </div>
-            <div class="portfolio-card fade-in" id="project-5">
-              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #2d4a3e 0%, #1a3028 100%); display:flex; align-items:center; justify-content:center;">
+            <div class="portfolio-card" id="project-5">
+              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #2d4a3e 0%, #1a3028 100%); display:flex; align-items:center; justify-content:center; height: 120%;">
                 <span style="font-family:var(--font-display); font-size:var(--text-xl); color:#7bc89c; opacity:0.6;">Evergreen</span>
               </div>
               <div class="portfolio-card__overlay">
@@ -362,8 +397,8 @@
                 <div class="portfolio-card__tag">Healthcare Portal &bull; PWA</div>
               </div>
             </div>
-            <div class="portfolio-card fade-in" id="project-6">
-              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #3a1c4f 0%, #6b3fa0 100%); display:flex; align-items:center; justify-content:center;">
+            <div class="portfolio-card" id="project-6">
+              <div class="portfolio-card__img" style="background: linear-gradient(135deg, #3a1c4f 0%, #6b3fa0 100%); display:flex; align-items:center; justify-content:center; height: 120%;">
                 <span style="font-family:var(--font-display); font-size:var(--text-xl); color:#c89fff; opacity:0.6;">Lyric</span>
               </div>
               <div class="portfolio-card__overlay">
@@ -466,6 +501,22 @@
 <!-- Hidden elements for JS compatibility -->
 <div id="steve-bubble" style="display:none"><div id="steve-bubble-text"></div></div>
 
+<!-- ====== STEVE EMAIL CAPTURE OVERLAY ====== -->
+<div class="steve-email-overlay" id="steve-email-overlay">
+  <div class="steve-email-card">
+    <div class="steve-email-card__icon"><i data-lucide="mail" style="width:28px;height:28px"></i></div>
+    <h3 class="steve-email-card__title">Drop your email below</h3>
+    <p class="steve-email-card__text">We'll have someone from the team reach out to you shortly.</p>
+    <div class="steve-email-card__input-row">
+      <input type="email" class="form__input" id="steve-email-input" placeholder="your@email.com" autocomplete="email">
+      <button class="btn btn--primary" id="steve-email-submit" style="white-space:nowrap;">
+        <i data-lucide="send" style="width:16px;height:16px"></i>
+        Send
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ====== THREE.JS ORB CANVAS ====== -->
 <div id="orb-canvas-container"></div>
 
@@ -473,5 +524,6 @@
 <script type="module" src="./orb.js"></script>
 <script type="module" src="./steve.js"></script>
 <script src="./app.js" defer></script>
+<script src="./scroll.js" defer></script>
 </body>
 </html>

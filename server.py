@@ -59,8 +59,8 @@ async def chat(req: ChatRequest):
             claude_messages = [{"role": "user", "content": "Hello"}]
 
         response = llm_client.messages.create(
-            model="claude_haiku_4_5",
-            max_tokens=300,
+            model="claude_sonnet_4_6",
+            max_tokens=400,
             system=req.system or "You are Steve, a helpful and witty AI web developer concierge.",
             messages=claude_messages,
         )
@@ -130,6 +130,26 @@ async def submit_enquiry(req: EnquiryRequest):
 @app.get("/api/enquiries")
 async def list_enquiries():
     return JSONResponse({"enquiries": enquiries})
+
+
+# ── Lead Capture (from Steve voice conversation) ──────────
+
+class LeadRequest(BaseModel):
+    email: str
+    conversation: list[dict] = []
+
+leads: list[dict] = []
+
+@app.post("/api/lead")
+async def capture_lead(req: LeadRequest):
+    lead = {"email": req.email, "conversation": req.conversation}
+    leads.append(lead)
+    logger.info(f"New lead captured: {req.email}")
+    return JSONResponse({"status": "ok", "message": "Lead captured"})
+
+@app.get("/api/leads")
+async def list_leads():
+    return JSONResponse({"leads": leads})
 
 
 # ── Health Check ─────────────────────────────────────────
