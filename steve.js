@@ -384,7 +384,7 @@ if (emailInput) {
 async function speakText(text) {
   if (!text) return;
   isSpeaking = true;
-  stopListening(); // Pause listening while Steve speaks
+  stopListening(); // Pause listening while Jenny speaks
   updateStatus('Jenny is speaking...');
   clearPauseTimer();
 
@@ -426,18 +426,61 @@ async function speakText(text) {
   }
 }
 
+// === Best Available Voice Selection for Browser TTS ===
+// Picks the most natural-sounding female English voice available.
+// Priority: Google UK English Female > Google US English Female > Microsoft voices > any English female > any English
+let cachedBestVoice = null;
+
+function getBestVoice() {
+  if (cachedBestVoice) return cachedBestVoice;
+  const voices = speechSynthesis.getVoices();
+  if (!voices.length) return null;
+
+  // Ranked preferences — best to worst
+  const preferences = [
+    v => v.name === 'Google UK English Female',
+    v => v.name === 'Google US English Female',
+    v => v.name.includes('Google') && v.lang.startsWith('en') && v.name.toLowerCase().includes('female'),
+    v => v.name.includes('Microsoft') && v.lang.startsWith('en-GB') && (v.name.includes('Sonia') || v.name.includes('Libby')),
+    v => v.name.includes('Microsoft') && v.lang.startsWith('en') && (v.name.includes('Jenny') || v.name.includes('Aria')),
+    v => v.name.includes('Samantha'),  // macOS/iOS high-quality voice
+    v => v.name.includes('Karen'),     // macOS Australian
+    v => v.lang.startsWith('en-GB') && v.name.toLowerCase().includes('female'),
+    v => v.lang.startsWith('en') && v.name.toLowerCase().includes('female'),
+    v => v.lang.startsWith('en-GB'),
+    v => v.lang.startsWith('en-US'),
+    v => v.lang.startsWith('en'),
+  ];
+
+  for (const test of preferences) {
+    const match = voices.find(test);
+    if (match) {
+      cachedBestVoice = match;
+      console.log('Selected TTS voice:', match.name, match.lang);
+      return match;
+    }
+  }
+
+  cachedBestVoice = voices[0];
+  return voices[0];
+}
+
 function fallbackSpeak(text) {
   return new Promise(resolve => {
+    // Cancel any queued speech first
+    speechSynthesis.cancel();
+
     const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 1;
-    utter.pitch = 0.95;
+    utter.rate = 1.0;
+    utter.pitch = 1.05;   // Slightly higher for a warm female voice
+    utter.volume = 1.0;
     utter.lang = 'en-GB';
 
-    const voices = speechSynthesis.getVoices();
-    const ukMale = voices.find(v => v.lang.startsWith('en-GB') && v.name.toLowerCase().includes('male'));
-    const uk = voices.find(v => v.lang.startsWith('en-GB'));
-    if (ukMale) utter.voice = ukMale;
-    else if (uk) utter.voice = uk;
+    const voice = getBestVoice();
+    if (voice) {
+      utter.voice = voice;
+      utter.lang = voice.lang;
+    }
 
     utter.onstart = () => {
       isSpeaking = true;
@@ -457,6 +500,23 @@ function fallbackSpeak(text) {
       updateStatus('');
       if (conversationActive) startContinuousListening();
       resolve();
+    };
+
+    // Safety: if onend never fires (browser bug), resolve after a timeout
+    const safetyTimeout = setTimeout(() => {
+      if (isSpeaking) {
+        isSpeaking = false;
+        window.orbVisualizer?.setActive(false);
+        updateStatus('');
+        if (conversationActive) startContinuousListening();
+        resolve();
+      }
+    }, Math.max(10000, text.length * 100)); // ~100ms per character estimate
+
+    const origOnEnd = utter.onend;
+    utter.onend = () => {
+      clearTimeout(safetyTimeout);
+      origOnEnd();
     };
 
     speechSynthesis.speak(utter);
@@ -771,14 +831,18 @@ if (emailOverlay) {
   });
 }
 
-// Load voices for browser TTS fallback
+// Load and cache voices for browser TTS
 if ('speechSynthesis' in window) {
   speechSynthesis.getVoices();
-  speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged = () => {
+    speechSynthesis.getVoices();
+    cachedBestVoice = null; // Reset cache so getBestVoice picks from the full list
+    getBestVoice(); // Pre-warm the voice selection
+  };
 }
 
 // === INTRO PAGE INTEGRATION ===
-// The intro splash page pre-fetches Steve's greeting audio.
+// The intro splash page pre-fetches Jenny's greeting audio.
 // When the user clicks "Enter Gitwix", we:
 //   1. Request mic permission (the click unlocks browser audio + mic)
 //   2. Play the pre-loaded greeting INSTANTLY (zero delay)
