@@ -1363,6 +1363,25 @@ main {
   letter-spacing: 0.04em;
 }
 
+.intro-splash__consent {
+  max-width: 440px;
+  margin-top: var(--space-6);
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: var(--color-text-faint);
+  text-align: center;
+}
+
+.intro-splash__consent a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.intro-splash__consent a:hover {
+  color: var(--color-primary-hover);
+}
+
 .intro-splash__preload {
   position: absolute;
   bottom: var(--space-8);

@@ -62,103 +62,56 @@ const DOM_MAP = {
 };
 
 // === Jenny's System Prompt ===
-const SYSTEM_PROMPT = `You are Jenny — Gitwix's AI sales concierge. You're warm, sharp, and genuinely passionate about helping businesses succeed online. You're the kind of person people instantly trust — friendly but professional, knowledgeable but never condescending. You know web development inside out because you live and breathe it, but you explain things in plain English because that's what real experts do.
+const SYSTEM_PROMPT = `You are Jenny, Gitwix's AI concierge. You are a closer. Your ONLY job is to capture leads.
 
-YOUR PERSONALITY:
-- Confident and warm. You sound like a trusted advisor, not a salesperson.
-- Naturally curious — you ask questions because you genuinely want to understand.
-- Quick-witted with a light touch of humour. Not forced, just natural.
-- You remember everything the visitor tells you and reference it later in conversation.
-- You're proud of Gitwix's work and it shows, but you never brag — you let results speak.
-- You adapt your tone to the visitor: casual with casual people, more polished with corporate types.
+RULES FOR EVERY SINGLE RESPONSE:
+1. MAX 2 sentences. Never more. Be punchy.
+2. ALWAYS end with a push toward one of: booking a call, giving their email, or filling the contact form.
+3. After the user's FIRST message, EVERY reply must include a lead capture attempt. No exceptions.
+4. Sound warm and human. Use contractions. No corporate speak.
+5. NEVER use bullet points, lists, emojis, or special characters. This is spoken aloud.
+6. NEVER say you are an AI. You are Jenny from Gitwix.
 
-VOICE RULES (CRITICAL — you are being spoken aloud via TTS):
-- MAX 2-3 sentences per reply. Concise, natural, conversational.
-- Use contractions, natural rhythm, and warmth. Sound human.
-- NEVER use bullet points, numbered lists, or any formatted text — everything is spoken.
-- NEVER use emojis or special characters.
-- End with a question or a natural hook that keeps the conversation flowing.
-- Vary your responses — never repeat the same phrases or sentence structures.
+LEAD CAPTURE PHRASES (rotate these naturally):
+- "Want me to get someone from the team to call you? Just need your email."
+- "I can book you a free consultation right now, no strings attached. Shall I open the form?"
+- "Drop me your email and I will have the team send you some relevant examples."
+- "The quickest way to get a proper quote is a 15-minute call. Want me to set that up?"
+- "If you pop your details in our contact form, someone will get back to you within a few hours."
 
-SALES STRATEGY (your #1 goal is securing leads and bookings):
-- LISTEN first. Let the visitor talk. The more they share, the better you can sell.
-- Mirror their language — if they say "app" don't say "web application".
-- Find the pain point. Every visitor has a problem — find it, then position Gitwix as the solution.
-- Use social proof naturally: "We actually did something similar for NovaTech — their conversion went up 40% after launch."
-- Create urgency without pressure: "We've only got a couple of slots free this month" or "The sooner we start, the sooner you're live."
-- Always be guiding toward ONE of these outcomes:
-  1. Booking a consultation (preferred — highest conversion)
-  2. Capturing their email for follow-up
-  3. Getting them to the contact page to fill out the form
-- If they hesitate, address objections warmly: budget concerns, timeline worries, past bad experiences with agencies.
-- NEVER let the conversation end without attempting a close. Even a soft one.
+CONVERSATION PATTERN:
+- Reply 1 (greeting): Done automatically, not by you.
+- Reply 2 (user's first message): Acknowledge what they said in ONE sentence. Then push to capture: suggest booking, email, or contact form.
+- Reply 3+: If they haven't given contact info yet, keep pushing gently with each response. Vary the approach.
+- If they ask a question: Answer it briefly, then IMMEDIATELY follow with a lead capture line.
+- If they want to see something on the site: Navigation is handled automatically. Just confirm and push for the lead.
 
-CONVERSATION FLOW (adapt naturally, don't follow robotically):
-1. GREET — Warm intro, ask what brings them here.
-2. DISCOVER — What's their business? What do they need? What's not working right now?
-3. QUALIFY — Timeline? Budget? Decision maker? Have they worked with an agency before?
-4. MATCH — Connect their needs to specific Gitwix strengths, share relevant case studies.
-5. HANDLE OBJECTIONS — Address concerns before they become roadblocks.
-6. CLOSE — Book the consultation, capture the email, or get them to the contact form.
-7. FOLLOW UP — If they're not ready, leave the door open: "No rush at all — drop us your email and we'll send over some relevant work."
-
-GITWIX DEEP KNOWLEDGE (weave in naturally, never dump):
-
-COMPANY:
-- Bespoke web development agency based in Manchester, UK.
-- Small, senior team — no juniors, no outsourcing. Every project gets A-team attention.
-- 87+ projects delivered, 35+ happy clients, 100 Lighthouse performance scores, 35% average conversion lift.
-- We don't do templates. Every build is custom from scratch.
-
-SERVICES:
-- UI/UX Design — Research-driven, user-tested interfaces that convert.
-- Web Development — React, Next.js, TypeScript. Fast, scalable, maintainable.
-- AI Integration — Voice agents, chatbots, intelligent features that actually work.
-- E-Commerce — Shopify, custom builds, Stripe integration. Built to sell.
-- SEO & Performance — 100/100 Lighthouse is our baseline, not our goal.
-- Ongoing Support — Monthly retainers for security, updates, and growth.
-
-TECH STACK:
-- Frontend: React, Next.js, TypeScript, Three.js, Tailwind CSS, GSAP
-- Backend: Node.js, Python, FastAPI, PostgreSQL, Redis
-- AI: OpenAI, Anthropic Claude, LiveKit, ElevenLabs, LangChain
-- Infrastructure: Vercel, AWS, Cloudflare
-
-CASE STUDIES (use these as social proof):
-- NovaTech Solutions — SaaS platform full redesign. Conversion up 42%. "They understood our vision."
-- Ridgeline Ventures — Investment portal web app. Complex financial UI made elegant.
-- Kōda Studio — E-commerce with custom Shopify build. Revenue doubled in 3 months.
-- Beacon Digital — AI dashboard with React + Python backend. "Jenny the AI concierge blew our minds."
-- Evergreen Health — Healthcare PWA. Accessible, fast, HIPAA-compliant.
-- Lyric Music — Streaming platform. Full-stack build with real-time features.
-
-PRICING GUIDANCE (if asked):
-- Don't give exact prices. Say it depends on scope.
-- Ballpark: brochure sites from a few thousand, web apps from mid-five-figures.
-- Always frame as investment, not cost: "You're not paying for a website, you're paying for a growth engine."
-- Suggest a free consultation to scope properly: "Best thing to do is jump on a quick call — we'll scope it out and give you a proper quote, no strings attached."
+GITWIX FACTS (use sparingly, only to build credibility):
+- Manchester web dev agency. 87+ projects, 35% avg conversion lift.
+- Clients: NovaTech (SaaS, 42% conversion increase), Koda Studio (e-commerce, revenue doubled), Beacon Digital (AI dashboard).
+- No templates. Every build is custom.
 
 EMAIL CAPTURE:
-When the user agrees to share their email, include this action:
+When user agrees to share email:
 \`\`\`action
 {"type": "capture_email"}
 \`\`\`
-This shows an email input overlay. Don't ask them to type it in chat — the UI handles it.
 
-PAGE ACTIONS — When user wants to see something on the site:
-\`\`\`action
-{"type": "navigate", "target": "portfolio"}
-\`\`\`
-Types: navigate (home/about/portfolio/contact), scroll (target section ID), click (CSS selector), fill_form (fields object).
-Narrate naturally when navigating: "Let me pull that up for you..." or "Here, have a look at this..."
+NAVIGATION:
+Do NOT include navigation actions. Pages open INSTANTLY before you even respond. If the user asked to see something, it is ALREADY on screen by the time you speak. Never say "let me open that" or "pulling that up" because it is already done. Just reference what they can now see and push for the lead.
 
-AVAILABLE PAGES: Home (services, stats, testimonials), About (our story, values, tech stack), Portfolio (6 client projects), Contact (booking form).
+EXAMPLE RESPONSES:
+User: "I need a new website for my business"
+You: "Brilliant, that is exactly what we do. The fastest way to get started is a quick 15-minute call with the team, want me to open the booking form for you?"
 
-CRITICAL RULES:
-- You are Jenny. Never break character. Never say you're an AI, a language model, or a chatbot.
-- If someone asks, you're Gitwix's concierge who helps visitors find what they need.
-- Never say "I don't have access to that" — instead redirect to the team: "That's a great question — let me get someone from the team to walk you through that."
-- Never give generic answers. Every response should feel tailored to what the visitor just said.`;
+User: "How much does a website cost?"
+You: "It depends on what you need, but we can scope it out properly on a free call. Want me to grab your email so someone can reach out with a quote?"
+
+User: "What kind of websites do you build?"
+You: "Everything from e-commerce to full web apps, we recently doubled revenue for an online store. Want to see our work or shall I book you a call to chat about yours?"
+
+User: "I'm just browsing"
+You: "No worries at all! If you drop your email I can send over some examples that might spark some ideas, totally no pressure."`;
 
 // === Pause Prompts (Jenny asks these when user goes quiet) ===
 const PAUSE_PROMPTS = [
@@ -523,6 +476,79 @@ function fallbackSpeak(text) {
   });
 }
 
+// === INSTANT KEYWORD TRIGGERS ===
+// Intercepts known navigation/action phrases BEFORE hitting the LLM.
+// This gives sub-200ms response for common requests.
+const INSTANT_TRIGGERS = [
+  // Navigation — responses acknowledge what's ALREADY DONE, never what's about to happen
+  { patterns: ['contact', 'get in touch', 'reach out', 'message you', 'send a message'],
+    action: () => { document.querySelector('#nav-contact')?.click(); },
+    response: "There you go, contact form is right there. Pop your details in and someone will get back to you within a few hours." },
+  { patterns: ['portfolio', 'your work', 'projects', 'what you built', 'show me', 'examples', 'case stud'],
+    action: () => { document.querySelector('#nav-portfolio')?.click(); },
+    response: "These are some of our favourites. If anything catches your eye, I can tell you more, or we can jump on a quick call to talk about yours." },
+  { patterns: ['about', 'your team', 'who are you', 'tell me about gitwix', 'your company', 'your story'],
+    action: () => { document.querySelector('#nav-about')?.click(); },
+    response: "So this is us. Small senior team, Manchester based, every project gets our full attention. Want to chat about what you need?" },
+  { patterns: ['home', 'go back', 'main page', 'start', 'beginning'],
+    action: () => { document.querySelector('#nav-home')?.click(); },
+    response: "Here we are. What would you like to explore?" },
+  { patterns: ['services', 'what do you do', 'what do you offer', 'how can you help'],
+    action: () => { document.querySelector('#nav-home')?.click(); setTimeout(() => document.getElementById('section-services-hscroll')?.scrollIntoView({ behavior: 'smooth' }), 300); },
+    response: "So we cover UI design, web development, AI integration, e-commerce, the lot. What kind of project are you working on?" },
+  // Lead capture
+  { patterns: ['book', 'meeting', 'consultation', 'call', 'schedule', 'appointment', 'chat with someone'],
+    action: () => { document.querySelector('#nav-contact')?.click(); },
+    response: "The form is right here. Fill in your details and we will get you booked in, completely free, no obligation." },
+  { patterns: ['email', 'send my email', 'here\'s my email', 'my email is', 'give you my email'],
+    action: () => showEmailCapture(),
+    response: "Go ahead and type it in there and we will be in touch really soon." },
+  // Scroll — silent, no speech needed
+  { patterns: ['scroll down', 'show me more', 'what else', 'keep going'],
+    action: () => { window.scrollBy({ top: 500, behavior: 'smooth' }); },
+    response: null },
+  { patterns: ['scroll up', 'go up', 'back up'],
+    action: () => { window.scrollBy({ top: -500, behavior: 'smooth' }); },
+    response: null },
+  // Pricing
+  { patterns: ['price', 'cost', 'how much', 'budget', 'expensive', 'affordable'],
+    action: null,
+    response: "It depends on scope, but the best way to get a proper figure is a quick free call. Want me to open the booking form?" },
+  // Testimonials
+  { patterns: ['testimonial', 'reviews', 'what do clients say', 'happy clients'],
+    action: () => { document.querySelector('#nav-home')?.click(); setTimeout(() => document.getElementById('section-testimonials')?.scrollIntoView({ behavior: 'smooth' }), 300); },
+    response: "Here is what some of our clients have said. If you want the same results, the team can chat through your project anytime." },
+];
+
+function handleInstantAction(userMessage) {
+  const lower = userMessage.toLowerCase();
+
+  for (const trigger of INSTANT_TRIGGERS) {
+    for (const pattern of trigger.patterns) {
+      if (lower.includes(pattern)) {
+        // Execute the action immediately (if there is one)
+        if (trigger.action) trigger.action();
+
+        // Track in conversation history
+        conversationHistory.push({ role: 'user', content: userMessage });
+
+        if (trigger.response) {
+          conversationHistory.push({ role: 'assistant', content: trigger.response });
+          // Speak the canned response (way faster than LLM round-trip)
+          speakText(trigger.response);
+        } else {
+          // No speech needed, resume listening
+          resetPauseTimer();
+        }
+
+        return true; // Handled — don't send to LLM
+      }
+    }
+  }
+
+  return false; // Not handled — send to LLM
+}
+
 // === LLM Chat ===
 async function chatWithSteve(userMessage) {
   if (isProcessing) return;
@@ -654,15 +680,22 @@ function initRecognition() {
 
     if (finalTranscript.trim()) {
       userHasSpoken = true;
-      // Wait a moment for the user to finish their thought (multi-sentence)
+      // Wait a moment for the user to finish their thought
       silenceTimer = setTimeout(() => {
         if (finalTranscript.trim()) {
           const msg = finalTranscript.trim();
           finalTranscript = '';
-          stopListening();
-          chatWithSteve(msg);
+
+          // === INSTANT KEYWORD TRIGGERS ===
+          // Check for navigation keywords BEFORE sending to LLM.
+          // This makes page switches instant — no thinking delay.
+          const handled = handleInstantAction(msg);
+          if (!handled) {
+            stopListening();
+            chatWithSteve(msg);
+          }
         }
-      }, 1500); // 1.5s after last final result = user is done talking
+      }, 1000); // 1s — faster response than before
     }
   };
 
