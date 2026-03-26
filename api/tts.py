@@ -1,30 +1,107 @@
-"""Vercel Serverless Function — Steve TTS via ElevenLabs."""
+"""Vercel Serverless Function — Jenny TTS via Google Gemini 2.5 Flash TTS."""
 
 import json
 import os
+import base64
 from http.server import BaseHTTPRequestHandler
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 
-
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "").strip()
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "").strip()
 
-# Voice IDs
-VOICE_MAP = {
-    "steve": "xYa75LlayhWHCRl1yJSH",     # User-selected voice from ElevenLabs library
-    "charlie": "IKne3meq5aSn9XLyUdCD",
-    "daniel": "onwK4e9ZLuTAKqWW03F9",
-    "george": "JBFqnCBsd6RMkjVDRZzb",
-}
-DEFAULT_VOICE = "steve"
+# Gemini TTS endpoint
+GEMINI_TTS_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent"
 
-# Models to try in order (some may not be available on all plans)
-TTS_MODELS = [
-    "eleven_multilingual_v2",
-    "eleven_turbo_v2_5",
-    "eleven_turbo_v2",
-    "eleven_monolingual_v1",
-]
+# Gemini voice — Kore is a warm, natural female voice
+GEMINI_VOICE = "Kore"
+
+
+def pcm_to_wav(pcm_data, sample_rate=24000, channels=1, sample_width=2):
+    """Wrap raw PCM bytes in a WAV header."""
+    import struct
+    data_size = len(pcm_data)
+    header = struct.pack(
+        '<4sI4s4sIHHIIHH4sI',
+        b'RIFF',
+        36 + data_size,
+        b'WAVE',
+        b'fmt ',
+        16,  # chunk size
+        1,   # PCM format
+        channels,
+        sample_rate,
+        sample_rate * channels * sample_width,  # byte rate
+        channels * sample_width,  # block align
+        sample_width * 8,  # bits per sample
+        b'data',
+        data_size,
+    )
+    return header + pcm_data
+
+
+def gemini_tts(text, api_key):
+    """Call Gemini 2.5 Flash TTS and return WAV audio bytes."""
+    url = f"{GEMINI_TTS_URL}?key={api_key}"
+
+    payload = json.dumps({
+        "contents": [{
+            "parts": [{"text": f"Say warmly and naturally: {text}"}]
+        }],
+        "generationConfig": {
+            "responseModalities": ["AUDIO"],
+            "speechConfig": {
+                "voiceConfig": {
+                    "prebuiltVoiceConfig": {
+                        "voiceName": GEMINI_VOICE
+                    }
+                }
+            }
+        }
+    }).encode("utf-8")
+
+    req = Request(url, data=payload, method="POST")
+    req.add_header("Content-Type", "application/json")
+
+    resp = urlopen(req, timeout=20)
+    data = json.loads(resp.read())
+
+    # Extract base64 audio from response
+    candidates = data.get("candidates", [])
+    if candidates:
+        parts = candidates[0].get("content", {}).get("parts", [])
+        if parts and "inlineData" in parts[0]:
+            audio_b64 = parts[0]["inlineData"]["data"]
+            pcm_data = base64.b64decode(audio_b64)
+            # Gemini returns raw PCM (s16le, 24kHz, mono) — wrap in WAV header
+            return pcm_to_wav(pcm_data, sample_rate=24000, channels=1, sample_width=2)
+
+    return None
+
+
+def elevenlabs_tts(text, api_key):
+    """Fallback: Call ElevenLabs TTS."""
+    voice_id = "xYa75LlayhWHCRl1yJSH"
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+
+    payload = json.dumps({
+        "text": text,
+        "model_id": "eleven_multilingual_v2",
+        "voice_settings": {
+            "stability": 0.5,
+            "similarity_boost": 0.75,
+            "style": 0.0,
+            "use_speaker_boost": True,
+        }
+    }).encode("utf-8")
+
+    req = Request(url, data=payload, method="POST")
+    req.add_header("Content-Type", "application/json")
+    req.add_header("xi-api-key", api_key)
+    req.add_header("Accept", "audio/mpeg")
+
+    resp = urlopen(req, timeout=20)
+    return resp.read()
 
 
 class handler(BaseHTTPRequestHandler):
@@ -32,67 +109,48 @@ class handler(BaseHTTPRequestHandler):
         try:
             content_length = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(content_length)) if content_length else {}
-
             text = body.get("text", "")
-            voice_name = body.get("voice", DEFAULT_VOICE)
-            voice_id = VOICE_MAP.get(voice_name, VOICE_MAP[DEFAULT_VOICE])
 
             if not text:
                 self._respond_error(400, "No text provided")
                 return
 
-            if not ELEVENLABS_API_KEY:
-                self._respond_error(422, "TTS not configured")
-                return
-
-            # Try each model until one works
             audio_bytes = None
+            content_type = "audio/wav"
             last_error = ""
 
-            for model_id in TTS_MODELS:
+            # Try Gemini TTS first (free, high quality)
+            if GOOGLE_API_KEY:
                 try:
-                    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-                    payload = json.dumps({
-                        "text": text,
-                        "model_id": model_id,
-                        "voice_settings": {
-                            "stability": 0.5,
-                            "similarity_boost": 0.75,
-                            "style": 0.0,
-                            "use_speaker_boost": True,
-                        }
-                    }).encode("utf-8")
-
-                    req = Request(url, data=payload, method="POST")
-                    req.add_header("Content-Type", "application/json")
-                    req.add_header("xi-api-key", ELEVENLABS_API_KEY)
-                    req.add_header("Accept", "audio/mpeg")
-
-                    response = urlopen(req, timeout=25)
-                    audio_bytes = response.read()
-                    if audio_bytes and len(audio_bytes) > 100:
-                        break
+                    audio_bytes = gemini_tts(text, GOOGLE_API_KEY)
+                    content_type = "audio/wav"
                 except HTTPError as e:
                     err_body = ""
                     try:
                         err_body = e.read().decode()[:150]
                     except Exception:
                         pass
-                    last_error = f"{model_id}: HTTP {e.code} {err_body}"
-                    continue
+                    last_error = f"Gemini: HTTP {e.code} {err_body}"
                 except Exception as e:
-                    last_error = f"{model_id}: {str(e)[:80]}"
-                    continue
+                    last_error = f"Gemini: {str(e)[:100]}"
+
+            # Fallback to ElevenLabs if Gemini fails
+            if not audio_bytes and ELEVENLABS_API_KEY:
+                try:
+                    audio_bytes = elevenlabs_tts(text, ELEVENLABS_API_KEY)
+                    content_type = "audio/mpeg"
+                except Exception as e:
+                    last_error += f" | ElevenLabs: {str(e)[:80]}"
 
             if audio_bytes and len(audio_bytes) > 100:
                 self.send_response(200)
-                self.send_header("Content-Type", "audio/mpeg")
+                self.send_header("Content-Type", content_type)
                 self.send_header("Content-Disposition", "inline")
                 self._cors()
                 self.end_headers()
                 self.wfile.write(audio_bytes)
             else:
-                self._respond_error(422, f"All TTS models failed: {last_error[:120]}")
+                self._respond_error(422, f"TTS failed: {last_error[:150]}")
 
         except Exception as e:
             self._respond_error(422, f"TTS error: {str(e)[:100]}")
