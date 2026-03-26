@@ -114,14 +114,14 @@ You: "Everything from e-commerce to full web apps, we recently doubled revenue f
 User: "I'm just browsing"
 You: "No worries at all! If you drop your email I can send over some examples that might spark some ideas, totally no pressure."`;
 
-// === Pause Prompts (Jenny asks these when user goes quiet) ===
+// === Pause Prompts (Jenny asks when user goes quiet — always lead-focused) ===
 const PAUSE_PROMPTS = [
-  "So what kind of website or project are you thinking about? I'd love to help point you in the right direction.",
-  "Have you got any questions about how we work at Gitwix? Happy to walk you through it.",
-  "Would you like me to connect you with one of the team? I can set that up really easily.",
-  "If you'd like, I can grab your email and have someone reach out with some ideas. Totally no pressure.",
-  "Want to see some of our recent projects? We've got some really exciting case studies I think you'd like.",
-  "Tell me a bit about your business. Helps me figure out exactly how we can help.",
+  "What kind of project are you thinking about? The more I know, the better I can help.",
+  "Shall I open the contact form so the team can reach out to you? Takes two seconds.",
+  "If you drop your email in, I can get someone from the team to send over some ideas. No pressure at all.",
+  "The quickest way to get a proper answer is a free call with the team. Want me to set that up?",
+  "I can show you some projects similar to what you might need. Or we can just get you booked in for a chat.",
+  "Still there? If you want, I can grab your details and have someone follow up when it suits you better.",
 ];
 
 // === Audio Analysis for Orb ===
@@ -560,17 +560,24 @@ async function chatWithSteve(userMessage) {
   updateStatus('Jenny is thinking...');
 
   try {
+    // Build context-aware system prompt
+    const userMsgCount = conversationHistory.filter(m => m.role === 'user').length;
+    const currentPage = document.querySelector('.page--active')?.id?.replace('page-', '') || 'home';
+    let contextNote = '';
+    if (emailCaptured) {
+      contextNote = '\nThe user has ALREADY given their email. Thank them and offer to show them around the site. Do NOT ask for email again.';
+    } else if (userMsgCount >= 3) {
+      contextNote = '\nYou have already chatted for a while. The email capture form is now showing on screen. Encourage them to pop their details in right there. Do NOT repeat previous lines, vary your approach.';
+    } else if (userMsgCount >= 2) {
+      contextNote = '\nThis is your third exchange. Be more direct about capturing the lead. Suggest the contact form or offer to grab their email.';
+    }
+
     const res = await fetch(`${API}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        messages: conversationHistory,
-        system: SYSTEM_PROMPT,
-        context: {
-          emailCaptured,
-          currentPage: document.querySelector('.page--active')?.id || 'page-home',
-          pauseCount,
-        },
+        messages: conversationHistory.slice(-8), // Only send last 8 messages to reduce repetition
+        system: SYSTEM_PROMPT + contextNote,
       }),
     });
 
@@ -582,7 +589,7 @@ async function chatWithSteve(userMessage) {
 
     conversationHistory.push({ role: 'assistant', content: cleanText });
 
-    // Execute actions
+    // Execute actions from LLM
     for (const action of actions) {
       await executeAction(action);
     }
@@ -590,7 +597,17 @@ async function chatWithSteve(userMessage) {
     // Speak the response
     await speakText(cleanText);
 
-    // Start pause timer after Steve speaks
+    // AUTO LEAD CAPTURE: After Jenny's 2nd real reply, if no lead captured,
+    // automatically show the email/contact capture.
+    const jennyReplies = conversationHistory.filter(m => m.role === 'assistant').length;
+    if (jennyReplies >= 3 && !emailCaptured) {
+      // Show email capture overlay automatically
+      setTimeout(() => {
+        showEmailCapture();
+      }, 500);
+    }
+
+    // Start pause timer
     resetPauseTimer();
 
   } catch (err) {
