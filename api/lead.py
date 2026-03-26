@@ -10,11 +10,15 @@ class handler(BaseHTTPRequestHandler):
             content_length = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(content_length)) if content_length else {}
 
+            name = body.get("name", "")
             email = body.get("email", "")
+            project = body.get("project", "")
             conversation = body.get("conversation", [])
 
-            # In production, store in a database
-            print(f"New lead captured: {email}")
+            # In production, store in a database (Supabase, Airtable, etc)
+            print(f"LEAD CAPTURED: {name} | {email} | {project[:80]}")
+            print(f"Conversation turns: {len(conversation)}")
+            # TODO: Send notification email, add to CRM, etc.
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")

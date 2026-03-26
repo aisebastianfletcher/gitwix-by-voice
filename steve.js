@@ -35,6 +35,11 @@ let userHasSpoken = false;        // Whether the user has said anything yet
 let emailCaptured = false;        // Whether we already got the email
 let pauseCount = 0;               // How many pause-prompts Jenny has fired
 
+// === Voice Lead Capture State Machine ===
+let captureMode = false;          // Is Jenny currently capturing lead info?
+let captureStep = 0;              // 0=name, 1=email, 2=project
+const capturedLead = { name: '', email: '', project: '' };
+
 const PAUSE_TIMEOUT = 10000;       // 10s of silence before Jenny prompts
 const MAX_PAUSE_PROMPTS = 3;      // Don't annoy — max 3 unprompted questions
 
@@ -477,9 +482,127 @@ function fallbackSpeak(text) {
   });
 }
 
+// === VOICE LEAD CAPTURE FLOW ===
+// Jenny asks for info conversationally. No forms. Pure voice.
+
+function startLeadCapture() {
+  if (captureMode || emailCaptured) return;
+  captureMode = true;
+  captureStep = 0;
+  const askName = "Before I let you go, can I grab your name so I know who I am talking to?";
+  conversationHistory.push({ role: 'assistant', content: askName });
+  speakText(askName);
+}
+
+function handleCaptureResponse(userMessage) {
+  const msg = userMessage.trim();
+
+  if (captureStep === 0) {
+    capturedLead.name = msg;
+    captureStep = 1;
+    const askEmail = `Got it, ${msg.split(' ')[0]}. And what is the best email to reach you on?`;
+    conversationHistory.push({ role: 'user', content: msg });
+    conversationHistory.push({ role: 'assistant', content: askEmail });
+    speakText(askEmail);
+    return true;
+  }
+
+  if (captureStep === 1) {
+    // Clean up speech-to-text email
+    let email = msg.toLowerCase()
+      .replace(/\s+at\s+/g, '@')
+      .replace(/\s+dot\s+/g, '.')
+      .replace(/\s/g, '')
+      .replace(/,/g, '.');
+    capturedLead.email = email;
+    captureStep = 2;
+    const askProject = "And in a sentence or two, what are you looking to build or what do you need help with?";
+    conversationHistory.push({ role: 'user', content: msg });
+    conversationHistory.push({ role: 'assistant', content: askProject });
+    speakText(askProject);
+    return true;
+  }
+
+  if (captureStep === 2) {
+    capturedLead.project = msg;
+    captureStep = 3;
+    captureMode = false;
+    emailCaptured = true;
+    conversationHistory.push({ role: 'user', content: msg });
+
+    showLeadConfirmation();
+
+    const confirm = `Perfect. I have popped your details on screen. Can you just check they look right?`;
+    conversationHistory.push({ role: 'assistant', content: confirm });
+    speakText(confirm);
+    return true;
+  }
+
+  return false;
+}
+
+function showLeadConfirmation() {
+  const existing = document.getElementById('lead-confirm-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'lead-confirm-overlay';
+  overlay.className = 'steve-email-overlay visible';
+  overlay.innerHTML = `
+    <div class="steve-email-card" style="max-width:500px;text-align:left;">
+      <h3 style="font-family:var(--font-display);font-size:var(--text-lg);font-weight:500;margin-bottom:var(--space-4);text-align:center;">Just confirming your details</h3>
+      <div style="display:flex;flex-direction:column;gap:var(--space-3);margin-bottom:var(--space-6);">
+        <div style="display:flex;justify-content:space-between;padding:var(--space-3) var(--space-4);background:var(--color-bg);border-radius:var(--radius-md);border:1px solid var(--color-divider);">
+          <span style="color:var(--color-text-muted);font-size:var(--text-sm);">Name</span>
+          <span style="font-weight:500;font-size:var(--text-sm);">${capturedLead.name}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:var(--space-3) var(--space-4);background:var(--color-bg);border-radius:var(--radius-md);border:1px solid var(--color-divider);">
+          <span style="color:var(--color-text-muted);font-size:var(--text-sm);">Email</span>
+          <span style="font-weight:500;font-size:var(--text-sm);">${capturedLead.email}</span>
+        </div>
+        <div style="padding:var(--space-3) var(--space-4);background:var(--color-bg);border-radius:var(--radius-md);border:1px solid var(--color-divider);">
+          <span style="color:var(--color-text-muted);font-size:var(--text-sm);display:block;margin-bottom:var(--space-1);">Project</span>
+          <span style="font-size:var(--text-sm);">${capturedLead.project}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:var(--space-3);">
+        <button id="lead-confirm-yes" class="btn btn--primary" style="flex:1;">That is correct</button>
+        <button id="lead-confirm-edit" class="btn btn--outline" style="flex:1;">Let me fix something</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  document.getElementById('lead-confirm-yes').addEventListener('click', async () => {
+    overlay.remove();
+    try {
+      await fetch(`${API}/api/lead`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: capturedLead.email, name: capturedLead.name, project: capturedLead.project, conversation: conversationHistory }),
+      });
+    } catch (e) { console.warn('Lead submit error:', e); }
+    const thanks = `Brilliant, that is all sent through. Someone from the team will be in touch with you really soon, ${capturedLead.name.split(' ')[0]}. Is there anything else I can help you with?`;
+    conversationHistory.push({ role: 'assistant', content: thanks });
+    speakText(thanks);
+  });
+
+  document.getElementById('lead-confirm-edit').addEventListener('click', () => {
+    overlay.remove();
+    emailCaptured = false;
+    captureMode = true;
+    captureStep = 0;
+    capturedLead.name = '';
+    capturedLead.email = '';
+    capturedLead.project = '';
+    const redo = "No problem, let us start again. What is your name?";
+    conversationHistory.push({ role: 'assistant', content: redo });
+    speakText(redo);
+  });
+}
+
 // === INSTANT KEYWORD TRIGGERS ===
 // Intercepts known navigation/action phrases BEFORE hitting the LLM.
-// This gives sub-200ms response for common requests.
 const INSTANT_TRIGGERS = [
   // Navigation — responses acknowledge what's ALREADY DONE, never what's about to happen
   { patterns: ['contact', 'get in touch', 'reach out', 'message you', 'send a message'],
@@ -597,14 +720,11 @@ async function chatWithSteve(userMessage) {
     // Speak the response
     await speakText(cleanText);
 
-    // AUTO LEAD CAPTURE: After Jenny's 2nd real reply, if no lead captured,
-    // automatically show the email/contact capture.
+    // AUTO VOICE LEAD CAPTURE: After Jenny's 3rd reply, if no lead captured,
+    // she starts the voice capture flow (asks name → email → project).
     const jennyReplies = conversationHistory.filter(m => m.role === 'assistant').length;
-    if (jennyReplies >= 3 && !emailCaptured) {
-      // Show email capture overlay automatically
-      setTimeout(() => {
-        showEmailCapture();
-      }, 500);
+    if (jennyReplies >= 3 && !emailCaptured && !captureMode) {
+      setTimeout(() => startLeadCapture(), 800);
     }
 
     // Start pause timer
@@ -704,9 +824,33 @@ function initRecognition() {
           const msg = finalTranscript.trim();
           finalTranscript = '';
 
-          // === INSTANT KEYWORD TRIGGERS ===
-          // Check for navigation keywords BEFORE sending to LLM.
-          // This makes page switches instant — no thinking delay.
+          // === ROUTING PRIORITY ===
+          // 1. Voice confirmation (yes/no when confirmation card is showing)
+          // 2. Capture mode (Jenny is collecting lead info step by step)
+          // 3. Instant keyword triggers (navigation, no LLM needed)
+          // 4. LLM chat (everything else)
+
+          const confirmOverlay = document.getElementById('lead-confirm-overlay');
+          const lower = msg.toLowerCase();
+
+          // Voice confirmation for lead details
+          if (confirmOverlay) {
+            if (/\b(yes|yeah|yep|correct|confirm|right|looks good|perfect|that.s right)\b/.test(lower)) {
+              document.getElementById('lead-confirm-yes')?.click();
+              return;
+            } else if (/\b(no|nope|wrong|fix|change|incorrect|not right|redo)\b/.test(lower)) {
+              document.getElementById('lead-confirm-edit')?.click();
+              return;
+            }
+          }
+
+          // Capture mode — Jenny is collecting info step by step
+          if (captureMode) {
+            handleCaptureResponse(msg);
+            return;
+          }
+
+          // Instant keyword triggers
           const handled = handleInstantAction(msg);
           if (!handled) {
             stopListening();
