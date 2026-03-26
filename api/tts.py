@@ -88,32 +88,52 @@ def gemini_tts(text, api_key):
     return None
 
 
+# Voices to try in order — Chirp3 HD is most natural, then Studio, then Neural2
+CLOUD_VOICES = [
+    # Chirp 3: HD — newest, most expressive, conversational
+    {"name": "en-GB-Chirp3-HD-Kore", "lang": "en-GB", "gender": "FEMALE"},
+    {"name": "en-GB-Chirp3-HD-Aoede", "lang": "en-GB", "gender": "FEMALE"},
+    {"name": "en-GB-Chirp3-HD-Leda", "lang": "en-GB", "gender": "FEMALE"},
+    # Studio — professional narration quality
+    {"name": "en-GB-Studio-C", "lang": "en-GB", "gender": "FEMALE"},
+    # Neural2 — solid fallback
+    {"name": "en-GB-Neural2-F", "lang": "en-GB", "gender": "FEMALE"},
+    {"name": "en-GB-Neural2-A", "lang": "en-GB", "gender": "FEMALE"},
+]
+
+
 def cloud_tts(text, api_key):
-    """Fallback: Google Cloud Text-to-Speech API with WaveNet voice."""
-    url = f"{CLOUD_TTS_URL}?key={api_key}"
+    """Google Cloud TTS — tries Chirp3 HD first (most natural), falls through to Neural2."""
+    for voice_cfg in CLOUD_VOICES:
+        try:
+            url = f"{CLOUD_TTS_URL}?key={api_key}"
 
-    payload = json.dumps({
-        "input": {"text": text},
-        "voice": {
-            "languageCode": "en-GB",
-            "name": "en-GB-Neural2-A",
-            "ssmlGender": "FEMALE"
-        },
-        "audioConfig": {
-            "audioEncoding": "MP3",
-            "speakingRate": 1.0,
-            "pitch": 0.5,
-        }
-    }).encode("utf-8")
+            payload = json.dumps({
+                "input": {"text": text},
+                "voice": {
+                    "languageCode": voice_cfg["lang"],
+                    "name": voice_cfg["name"],
+                    "ssmlGender": voice_cfg["gender"]
+                },
+                "audioConfig": {
+                    "audioEncoding": "MP3",
+                    "speakingRate": 1.05,
+                    "pitch": 1.0,
+                    "effectsProfileId": ["large-home-entertainment-class-device"],
+                }
+            }).encode("utf-8")
 
-    req = Request(url, data=payload, method="POST")
-    req.add_header("Content-Type", "application/json")
+            req = Request(url, data=payload, method="POST")
+            req.add_header("Content-Type", "application/json")
 
-    resp = urlopen(req, timeout=15)
-    data = json.loads(resp.read())
-    audio_b64 = data.get("audioContent", "")
-    if audio_b64:
-        return base64.b64decode(audio_b64), "audio/mpeg"
+            resp = urlopen(req, timeout=15)
+            data = json.loads(resp.read())
+            audio_b64 = data.get("audioContent", "")
+            if audio_b64:
+                return base64.b64decode(audio_b64), "audio/mpeg"
+        except Exception:
+            continue
+
     return None, None
 
 
