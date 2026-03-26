@@ -9,12 +9,14 @@ from urllib.error import URLError, HTTPError
 
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "").strip()
 
-# Voice IDs — Charlie is a British male voice, perfect for Steve
+# Voice IDs
 VOICE_MAP = {
+    "steve": "xYa75LlayhWHCRl1yJSH",     # User-selected voice from ElevenLabs library
     "charlie": "IKne3meq5aSn9XLyUdCD",
     "daniel": "onwK4e9ZLuTAKqWW03F9",
     "george": "JBFqnCBsd6RMkjVDRZzb",
 }
+DEFAULT_VOICE = "steve"
 
 # Models to try in order (some may not be available on all plans)
 TTS_MODELS = [
@@ -32,8 +34,8 @@ class handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(content_length)) if content_length else {}
 
             text = body.get("text", "")
-            voice_name = body.get("voice", "charlie")
-            voice_id = VOICE_MAP.get(voice_name, VOICE_MAP["charlie"])
+            voice_name = body.get("voice", DEFAULT_VOICE)
+            voice_id = VOICE_MAP.get(voice_name, VOICE_MAP[DEFAULT_VOICE])
 
             if not text:
                 self._respond_error(400, "No text provided")
