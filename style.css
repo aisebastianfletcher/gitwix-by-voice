@@ -810,20 +810,17 @@ main {
    THREE.JS ORB — Hero Centrepiece
    ======================================================== */
 
-/* === ORB VIEWPORT WRAPPER — fixed to screen, moves with scroll === */
+/* === ORB VIEWPORT WRAPPER — full-screen, no clipping box === */
 #orb-viewport-wrapper {
   position: fixed;
   top: 0;
-  left: 60%;
-  right: auto;
-  width: 38vw;
+  left: 0;
+  width: 100vw;
   height: 100vh;
   z-index: 2;
   pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  will-change: left, opacity;
+  overflow: visible;
+  will-change: opacity;
   transition: none; /* GSAP handles transitions */
 }
 
@@ -831,6 +828,7 @@ main {
   width: 100%;
   height: 100%;
   pointer-events: none;
+  overflow: visible;
 }
 
 #orb-canvas-container canvas {
@@ -843,10 +841,10 @@ main {
   #orb-viewport-wrapper {
     position: fixed;
     width: 100vw;
-    height: 50vh;
-    top: 10vh;
-    right: 0;
-    opacity: 0.25;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    opacity: 0.2;
     z-index: 0;
   }
   .hero--split {

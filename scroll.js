@@ -19,50 +19,47 @@ function initScrollDynamics() {
   gsap.ticker.add((time) => lenis.raf(time * 1000));
   gsap.ticker.lagSmoothing(0);
 
-  // === STEVE ORB SCROLL COMPANION v3 (desktop only) ===
-  // v3: Smooth orb that glides between sections. The orb wrapper is 38vw wide.
-  // Positions are chosen so the orb sits cleanly between content, never overlapping.
-  // Uses onEnter/onEnterBack with gsap.to for smooth position-based animation.
+  // === ORB SCROLL COMPANION v4 (desktop only) ===
+  // v4: Full-screen canvas — orb floats freely with no bounding box.
+  // Position is controlled via orbVisualizer.setPositionX() which moves
+  // the mesh in 3D space. Opacity controlled via the wrapper.
   const orbWrapper = document.getElementById('orb-viewport-wrapper');
   const isDesktopOrb = window.innerWidth > 768;
 
   if (orbWrapper && isDesktopOrb) {
-    // Position constants (% from left edge):
-    //   right  = 62%  → orb in rightmost 38vw, clear of left content
-    //   left   = 2%   → orb in leftmost 38vw, clear of right content
-    //   far-R  = 68%  → pushed to edge during full-width services section
-    const ORB_RIGHT = '62%';
-    const ORB_LEFT  = '2%';
-    const ORB_FAR_R = '68%';
+    // 3D world positions (mesh.position.x):
+    //   +3.5 = orb cluster sits on the right side of screen
+    //   -3.5 = orb cluster sits on the left side
+    //   +5   = pushed far right (nearly off-edge, for services)
+    const ORB_RIGHT = 3.5;
+    const ORB_LEFT  = -3.5;
+    const ORB_FAR_R = 5;
 
-    // Initial position: orb on right
-    gsap.set(orbWrapper, { left: ORB_RIGHT, right: 'auto', width: '38vw', opacity: 1 });
+    // Set initial state
+    gsap.set(orbWrapper, { opacity: 1 });
+    window.orbVisualizer?.setPositionX(ORB_RIGHT);
+    window.orbVisualizer?.setScale(1);
 
-    // Smooth mover — all transitions use the same easing for consistency
-    let currentOrbTarget = ORB_RIGHT;
-    function moveOrb(left, opacity, scale, dur) {
-      if (left === currentOrbTarget) return; // Don't re-trigger same position
-      currentOrbTarget = left;
+    function moveOrb(posX, opacity, scale) {
+      // Animate opacity on the wrapper
       gsap.to(orbWrapper, {
-        left: left,
         opacity: opacity,
-        duration: dur || 1.2,
+        duration: 1.2,
         ease: 'power3.inOut',
         overwrite: 'auto',
-        onUpdate: () => window.orbResize?.(),
       });
+      // Move the 3D mesh position (smooth lerp handled in orb.js)
+      window.orbVisualizer?.setPositionX(posX);
       window.orbVisualizer?.setScale(scale);
     }
 
-    // Unified scroll listener: determine active section by which one
-    // occupies the most viewport area, then move the orb accordingly.
-    // This avoids trigger-ordering conflicts entirely.
+    // Section config: where the orb goes for each section
     const sectionConfig = [
-      { id: 'section-hero',             left: ORB_RIGHT, scale: 1,    opacity: 1,    dur: 1.0 },
-      { id: 'section-services-hscroll', left: ORB_FAR_R, scale: 0.45, opacity: 0.15, dur: 0.8 },
-      { id: 'section-stats',            left: ORB_LEFT,  scale: 0.7,  opacity: 0.5,  dur: 1.4 },
-      { id: 'section-testimonials',     left: ORB_LEFT,  scale: 0.65, opacity: 0.45, dur: 1.0 },
-      { id: 'section-cta',              left: ORB_RIGHT, scale: 0.8,  opacity: 0.55, dur: 1.4 },
+      { id: 'section-hero',             posX: ORB_RIGHT, scale: 1,    opacity: 1    },
+      { id: 'section-services-hscroll', posX: ORB_FAR_R, scale: 0.45, opacity: 0.15 },
+      { id: 'section-stats',            posX: ORB_LEFT,  scale: 0.7,  opacity: 0.5  },
+      { id: 'section-testimonials',     posX: ORB_LEFT,  scale: 0.65, opacity: 0.45 },
+      { id: 'section-cta',              posX: ORB_RIGHT, scale: 0.8,  opacity: 0.55 },
     ];
 
     let lastActiveSection = 'section-hero';
@@ -76,7 +73,6 @@ function initScrollDynamics() {
         const el = document.getElementById(cfg.id);
         if (!el) continue;
         const rect = el.getBoundingClientRect();
-        // How much of this section is visible in the viewport?
         const visTop = Math.max(0, rect.top);
         const visBot = Math.min(vh, rect.bottom);
         const coverage = Math.max(0, visBot - visTop);
@@ -88,11 +84,10 @@ function initScrollDynamics() {
 
       if (bestSection && bestSection.id !== lastActiveSection) {
         lastActiveSection = bestSection.id;
-        moveOrb(bestSection.left, bestSection.opacity, bestSection.scale, bestSection.dur);
+        moveOrb(bestSection.posX, bestSection.opacity, bestSection.scale);
       }
     }
 
-    // Run on every scroll tick via ScrollTrigger
     ScrollTrigger.addEventListener('refresh', updateOrbForScroll);
     ScrollTrigger.create({
       trigger: document.body,

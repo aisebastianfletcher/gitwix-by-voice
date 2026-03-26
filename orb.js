@@ -94,9 +94,15 @@ let audioLevel = 0;
 let frequencyData = new Float32Array(32);
 let isActive = false;
 
-// === Orb size state ===
+// === Orb size + position state ===
 let currentScale = 1;
 let targetScale = 1;
+
+// Camera offset — moves the orb cluster left/right without clipping
+// xOffset is in world units: negative = left, positive = right
+let targetCameraX = 3; // Default: orb drifts to the right
+let currentCameraX = 3;
+const CAMERA_MOVE_SPEED = 0.04;
 
 // === Public API ===
 window.orbVisualizer = {
@@ -115,9 +121,12 @@ window.orbVisualizer = {
     isActive = active;
     if (!active) audioLevel = 0;
   },
-  // Called by scroll.js to scale the orb (e.g. smaller in tight sections)
   setScale(s) {
     targetScale = s;
+  },
+  // Move orb cluster horizontally: -4 = far left, 0 = center, +4 = far right
+  setPositionX(x) {
+    targetCameraX = x;
   },
 };
 
@@ -189,6 +198,10 @@ function animate() {
   // Gentle breathing rotation
   mesh.rotation.y = time * 8;
   mesh.rotation.x = Math.sin(time * 4) * 0.06;
+
+  // Smoothly move the orb cluster by offsetting the mesh position (not camera)
+  currentCameraX += (targetCameraX - currentCameraX) * CAMERA_MOVE_SPEED;
+  mesh.position.x = currentCameraX;
 
   renderer.render(scene, camera);
 }
