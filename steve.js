@@ -601,47 +601,127 @@ function showLeadConfirmation() {
   });
 }
 
-// === INSTANT KEYWORD TRIGGERS ===
-// Intercepts known navigation/action phrases BEFORE hitting the LLM.
+// === SMART INTENT DETECTION ===
+// Fuzzy keyword matching with multiple response variants to sound natural.
+// Each intent has many trigger phrases to catch natural speech variations.
+
+function navigateTo(page) {
+  const link = document.querySelector(`#nav-${page}`);
+  if (link) link.click();
+  // Scroll to top smoothly after page switch
+  setTimeout(() => {
+    if (window._lenis) window._lenis.scrollTo(0, { duration: 0.6 });
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 100);
+}
+
+function smoothScrollTo(sectionId) {
+  const el = document.getElementById(sectionId);
+  if (el) {
+    if (window._lenis) window._lenis.scrollTo(el, { duration: 1.2, offset: -80 });
+    else el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// Pick a random response to avoid repetition
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
 const INSTANT_TRIGGERS = [
-  // Navigation — responses acknowledge what's ALREADY DONE, never what's about to happen
-  { patterns: ['contact', 'get in touch', 'reach out', 'message you', 'send a message'],
-    action: () => { document.querySelector('#nav-contact')?.click(); },
-    response: "There you go, contact form is right there. Pop your details in and someone will get back to you within a few hours." },
-  { patterns: ['portfolio', 'your work', 'projects', 'what you built', 'show me', 'examples', 'case stud'],
-    action: () => { document.querySelector('#nav-portfolio')?.click(); },
-    response: "These are some of our favourites. If anything catches your eye, I can tell you more, or we can jump on a quick call to talk about yours." },
-  { patterns: ['about', 'your team', 'who are you', 'tell me about gitwix', 'your company', 'your story'],
-    action: () => { document.querySelector('#nav-about')?.click(); },
-    response: "So this is us. Small senior team, Manchester based, every project gets our full attention. Want to chat about what you need?" },
-  { patterns: ['home', 'go back', 'main page', 'start', 'beginning'],
-    action: () => { document.querySelector('#nav-home')?.click(); },
-    response: "Here we are. What would you like to explore?" },
-  { patterns: ['services', 'what do you do', 'what do you offer', 'how can you help'],
-    action: () => { document.querySelector('#nav-home')?.click(); setTimeout(() => document.getElementById('section-services-hscroll')?.scrollIntoView({ behavior: 'smooth' }), 300); },
-    response: "So we cover UI design, web development, AI integration, e-commerce, the lot. What kind of project are you working on?" },
-  // Lead capture
-  { patterns: ['book', 'meeting', 'consultation', 'call', 'schedule', 'appointment', 'chat with someone'],
-    action: () => { document.querySelector('#nav-contact')?.click(); },
-    response: "The form is right here. Fill in your details and we will get you booked in, completely free, no obligation." },
-  { patterns: ['email', 'send my email', 'here\'s my email', 'my email is', 'give you my email'],
-    action: () => showEmailCapture(),
-    response: "Go ahead and type it in there and we will be in touch really soon." },
-  // Scroll — silent, no speech needed
-  { patterns: ['scroll down', 'show me more', 'what else', 'keep going'],
-    action: () => { window.scrollBy({ top: 500, behavior: 'smooth' }); },
-    response: null },
-  { patterns: ['scroll up', 'go up', 'back up'],
-    action: () => { window.scrollBy({ top: -500, behavior: 'smooth' }); },
-    response: null },
-  // Pricing
-  { patterns: ['price', 'cost', 'how much', 'budget', 'expensive', 'affordable'],
+  // --- CONTACT / GET IN TOUCH ---
+  { patterns: ['contact', 'get in touch', 'reach out', 'message', 'send a message', 'enquiry', 'inquiry', 'talk to someone', 'speak to someone', 'speak to the team', 'human', 'real person'],
+    action: () => navigateTo('contact'),
+    response: () => pick([
+      "There you go. If you want, I can just take your details by voice right now, saves you typing. Want to do that?",
+      "Contact page is up. But honestly, the fastest way is to just tell me your name and email and I will sort the rest. Shall we do that?",
+    ]) },
+
+  // --- PORTFOLIO / WORK ---
+  { patterns: ['portfolio', 'your work', 'projects', 'what you built', 'what have you done', 'show me', 'examples', 'case stud', 'previous work', 'past work', 'clients', 'who have you worked with', 'see your work', 'see some work', 'any examples'],
+    action: () => navigateTo('portfolio'),
+    response: () => pick([
+      "These are some of our recent builds. We did a full SaaS redesign for NovaTech that lifted their conversion by 42 percent. Anything here look similar to what you need?",
+      "Here is a selection. The Koda Studio project is a good one, their revenue doubled within three months of launching. Want me to walk you through any of these?",
+    ]) },
+
+  // --- ABOUT ---
+  { patterns: ['about', 'your team', 'who are you', 'tell me about', 'your company', 'your story', 'how long', 'where are you based', 'manchester', 'the team', 'who works there'],
+    action: () => navigateTo('about'),
+    response: () => pick([
+      "So we are a small senior team in Manchester. No juniors, no outsourcing, every project gets our full attention. What about you, what is your project?",
+      "This is a bit about who we are. We have delivered over 87 projects with a 35 percent average conversion lift. Shall I tell you more, or do you want to jump into your project?",
+    ]) },
+
+  // --- HOME ---
+  { patterns: ['home', 'go back', 'main page', 'start', 'beginning', 'take me back', 'first page', 'landing page'],
+    action: () => navigateTo('home'),
+    response: () => "Here we go. What would you like to look at?" },
+
+  // --- SERVICES ---
+  { patterns: ['services', 'what do you do', 'what do you offer', 'how can you help', 'what can you build', 'your capabilities', 'do you do', 'specialise', 'specialize'],
+    action: () => { navigateTo('home'); setTimeout(() => smoothScrollTo('section-services-hscroll'), 400); },
+    response: () => pick([
+      "We do UI and UX design, full web development in React and Next.js, AI integration, e-commerce, SEO, and ongoing support. What kind of project are you working on?",
+      "Everything from brochure sites to complex web apps. We recently built an AI dashboard for Beacon Digital and a streaming platform for Lyric Music. What do you need?",
+    ]) },
+
+  // --- BOOKING / CALL ---
+  { patterns: ['book', 'meeting', 'consultation', 'call', 'schedule', 'appointment', 'chat with', 'speak with', 'free call', 'set up a call', 'arrange a call', 'get a call', 'ring me'],
     action: null,
-    response: "It depends on scope, but the best way to get a proper figure is a quick free call. Want me to open the booking form?" },
-  // Testimonials
-  { patterns: ['testimonial', 'reviews', 'what do clients say', 'happy clients'],
-    action: () => { document.querySelector('#nav-home')?.click(); setTimeout(() => document.getElementById('section-testimonials')?.scrollIntoView({ behavior: 'smooth' }), 300); },
-    response: "Here is what some of our clients have said. If you want the same results, the team can chat through your project anytime." },
+    response: () => {
+      if (!captureMode && !emailCaptured) {
+        setTimeout(() => startLeadCapture(), 500);
+        return "Absolutely, let me grab a couple of details and we will get that set up for you.";
+      }
+      return "We are already on it. Someone from the team will reach out to you soon.";
+    } },
+
+  // --- GIVE CONTACT INFO ---
+  { patterns: ['my email', 'here is my email', 'give you my email', 'take my email', 'my number', 'my phone', 'here are my details', 'take my details', 'give you my details', 'my name is'],
+    action: null,
+    response: () => {
+      if (!captureMode && !emailCaptured) {
+        setTimeout(() => startLeadCapture(), 300);
+        return "Brilliant, let me just take a few things down.";
+      }
+      return "I have already got your details, you are all sorted.";
+    } },
+
+  // --- SCROLL ---
+  { patterns: ['scroll down', 'show me more', 'what else', 'keep going', 'more', 'next', 'continue', 'further down'],
+    action: () => { if (window._lenis) window._lenis.scrollTo(window.scrollY + 500, { duration: 0.8 }); else window.scrollBy({ top: 500, behavior: 'smooth' }); },
+    response: null },
+  { patterns: ['scroll up', 'go up', 'back up', 'top', 'go to the top'],
+    action: () => { if (window._lenis) window._lenis.scrollTo(Math.max(0, window.scrollY - 500), { duration: 0.8 }); else window.scrollBy({ top: -500, behavior: 'smooth' }); },
+    response: null },
+
+  // --- PRICING ---
+  { patterns: ['price', 'cost', 'how much', 'budget', 'expensive', 'affordable', 'charge', 'rates', 'investment', 'quote', 'estimate', 'ballpark'],
+    action: null,
+    response: () => pick([
+      "It really depends on scope. A brochure site starts at a few thousand, web apps go higher. The best way to get an accurate figure is a quick free call. Want me to set that up?",
+      "Every project is different so I would not want to guess. If I grab your details, the team can scope it properly and give you a real number. Takes about fifteen minutes. Shall we do that?",
+    ]) },
+
+  // --- TESTIMONIALS ---
+  { patterns: ['testimonial', 'reviews', 'what do clients say', 'happy clients', 'feedback', 'results', 'success stories'],
+    action: () => { navigateTo('home'); setTimeout(() => smoothScrollTo('section-testimonials'), 400); },
+    response: () => "Here is what our clients have to say. NovaTech saw a 42 percent conversion lift and Koda Studios revenue doubled. Want to get similar results for your business?" },
+
+  // --- STATS ---
+  { patterns: ['stats', 'numbers', 'how many projects', 'track record', 'experience', 'credentials'],
+    action: () => { navigateTo('home'); setTimeout(() => smoothScrollTo('section-stats'), 400); },
+    response: () => "87 projects delivered, 35 happy clients, 100 out of 100 Lighthouse scores, and a 35 percent average conversion lift. Want to be our next success story?" },
+
+  // --- THANKS / GOODBYE ---
+  { patterns: ['thank', 'thanks', 'cheers', 'bye', 'goodbye', 'that is all', 'that will do', 'nothing else'],
+    action: null,
+    response: () => {
+      if (!emailCaptured) {
+        setTimeout(() => startLeadCapture(), 500);
+        return "You are welcome. Before you go, let me grab your details quickly so the team can follow up. It will only take a second.";
+      }
+      return "Glad I could help. The team will be in touch soon. Have a great day.";
+    } },
 ];
 
 function handleInstantAction(userMessage) {
@@ -650,27 +730,28 @@ function handleInstantAction(userMessage) {
   for (const trigger of INSTANT_TRIGGERS) {
     for (const pattern of trigger.patterns) {
       if (lower.includes(pattern)) {
-        // Execute the action immediately (if there is one)
+        // Execute the action immediately
         if (trigger.action) trigger.action();
 
         // Track in conversation history
         conversationHistory.push({ role: 'user', content: userMessage });
 
-        if (trigger.response) {
-          conversationHistory.push({ role: 'assistant', content: trigger.response });
-          // Speak the canned response (way faster than LLM round-trip)
-          speakText(trigger.response);
+        // Get response (can be a string or a function that returns a string)
+        const responseText = typeof trigger.response === 'function' ? trigger.response() : trigger.response;
+
+        if (responseText) {
+          conversationHistory.push({ role: 'assistant', content: responseText });
+          speakText(responseText);
         } else {
-          // No speech needed, resume listening
           resetPauseTimer();
         }
 
-        return true; // Handled — don't send to LLM
+        return true;
       }
     }
   }
 
-  return false; // Not handled — send to LLM
+  return false;
 }
 
 // === LLM Chat ===

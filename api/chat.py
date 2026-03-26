@@ -22,7 +22,7 @@ def call_anthropic(system, messages, model):
     """Call Anthropic Messages API via raw HTTP."""
     payload = json.dumps({
         "model": model,
-        "max_tokens": 400,
+        "max_tokens": 150,  # Keep responses short for fast TTS
         "system": system,
         "messages": messages,
     }).encode()
